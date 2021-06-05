@@ -20,7 +20,10 @@ module.exports = {
       },
     },
   },
-  initialState: {},
+  initialState: {
+    currentVidID: '',
+    collectors: [],
+  },
   channels: {
     messenger: {
       enabled: false,
