@@ -78,7 +78,7 @@ async function sendSingleVid(context) {
 }
 
 async function like(context) {
-    const { displayName } = context.session.user;
+    const { displayName } = await context.getUserProfile();
     if (context.state.currentVidID !== '') {
         const id = context.state.currentVidID;
         context.setState({
@@ -91,7 +91,7 @@ async function like(context) {
                 }
             ],
         });
-        await context.sendText(`${displayName}收藏了「${id}」。`);
+        await context.sendText(`你收藏了「${id}」`);
         console.log(context.state);
     } else {
         return sendHelp(context);
@@ -100,7 +100,7 @@ async function like(context) {
 
 async function likeSpecific(context) {
     const { text } = context.event;
-    const { displayName } = context.session.user;
+    const { displayName } = await context.getUserProfile();
     const id = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0]).toUpperCase();
     context.setState({
         collectors: [
@@ -111,18 +111,19 @@ async function likeSpecific(context) {
             }
         ]
     });
-    await context.sendText(`${displayName}收藏了「${id}」。`);
+    await context.sendText(`你收藏了「${id}」`);
 }
 
 async function myLikes(context) {
-    const { displayName } = context.session.user;
+    const { displayName } = await context.getUserProfile();
     await context.sendText(`${displayName}的收藏：`);
     const data = context.state.collectors;
     const likesArr = _.map(_.mapValues(_.groupBy(data, 'name'), o => o.map(like => _.omit(like, 'name')))[`${displayName}`], 'likes');
 
-    _.forEach(likesArr, async function(like) {
-        await context.sendText(like);
-    })
+    // _.forEach(likesArr, async function(like) {
+    //     await context.sendText(like);
+    // })
+    await context.sendText(likesArr.join('\n'));
 }
 
 async function sendHelp(context) {
