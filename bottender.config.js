@@ -15,7 +15,7 @@ module.exports = {
         db: 0,
       },
       mongo: {
-        url: 'mongodb://localhost:27017',
+        url: 'mongodb+srv://charlottelatest:nwo64M7POB3x@cluster0.pdny9.mongodb.net/wdywwtd?retryWrites=true&w=majority',
         collectionName: 'sessions',
       },
     },
