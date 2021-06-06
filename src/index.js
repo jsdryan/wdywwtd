@@ -3,6 +3,9 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
+const MongoSessionStore = require('bottender');
+
+
 
 async function sendRandomVid(context) {
     const client = axios.create({
@@ -137,6 +140,6 @@ module.exports = async function App() {
         text(/^收藏$/, like),
         text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, likeSpecific),
         text(/^我的收藏$/, myLikes),
-        route('*', sendHelp),
+        // route('*', sendHelp),
     ]);
 };
