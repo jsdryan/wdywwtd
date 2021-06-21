@@ -1,6 +1,6 @@
 module.exports = {
   session: {
-    driver: process.env.NODE_ENV === 'production' ? 'mongo' : 'memory',
+    driver: 'mongo',
     stores: {
       memory: {
         maxSize: 500,
