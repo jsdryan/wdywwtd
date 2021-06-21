@@ -15,7 +15,7 @@ module.exports = {
         db: 0,
       },
       mongo: {
-        url: process.env.MONGODB_URI,
+        url: 'mongodb+srv://charlottelatest:B4d8A7SCi6Eq@cluster0.pdny9.mongodb.net/wdywwtd?retryWrites=true&w=majority',
         collectionName: 'sessions',
       },
     },
