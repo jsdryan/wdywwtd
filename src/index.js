@@ -3,9 +3,8 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
-const MongoSessionStore = require('bottender');
-
-
+const got = require('got');
+// const MongoSessionStore = require('bottender');
 
 async function sendRandomVid(context) {
     const client = axios.create({
@@ -36,6 +35,9 @@ async function sendRandomVid(context) {
 
     // Get covers.
     const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
+    const conetentID = randomVid.next.attribs.src.split('/').pop().split('ps.jpg')[0];
+    console.log(randomVid.next.attribs.src);
+    console.log(`https://videos.vpdmm.cc/litevideo/freepv/${conetentID[0]}/${conetentID[0]}${conetentID[1]}${conetentID[2]}/${conetentID}/${conetentID}_dm_w.mp4`);
 
     await context.sendImage({
         originalContentUrl: `https:${cover}`,
@@ -68,8 +70,12 @@ async function sendSingleVid(context) {
     // Get covers.
     const cover = `https://www.javbus.com${$('.bigImage > img').attr('src')}`;
 
-    await context.sendImage({
-        originalContentUrl: cover,
+    // Get preivew.
+    const preview = await getPreviewURL(id);
+
+    console.log(`預覽：${preview}`);
+    await context.sendVideo({
+        originalContentUrl: preview,
         previewImageUrl: cover,
     });
     await context.sendText(id);
@@ -131,6 +137,16 @@ async function myLikes(context) {
 
 async function sendHelp(context) {
     await context.sendText(`請輸入「抽」或特定番號（例如：SSNI-001）。`);
+}
+
+async function getPreviewURL(id) {
+    const res = await got(`https://www.dmm.co.jp/search/=/searchstr=${id}`, {
+        headers: {
+            'user-agent': 'Android'
+        }
+    });
+    const $ = cheerio.load(res.body);
+    return $('a.play-btn').attr('href');
 }
 
 module.exports = async function App() {
