@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
+const httpsUrl = require('https-url');
 // const MongoSessionStore = require('bottender');
 
 async function sendRandomVid(context) {
@@ -146,7 +147,7 @@ async function getPreviewURL(id) {
         }
     });
     const $ = cheerio.load(res.body);
-    return $('a.play-btn').attr('href');
+    return httpsUrl($('a.play-btn').attr('href'));
 }
 
 module.exports = async function App() {

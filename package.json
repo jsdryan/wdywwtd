@@ -16,6 +16,7 @@
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "3.4.0",
     "got": "^11.8.2",
+    "https-url": "^1.0.0",
     "jest": "27.0.3",
     "lodash": "^4.17.21",
     "parameterize": "^1.0.0",
