@@ -71,8 +71,9 @@ async function sendSingleVid(context) {
         for (let el of vidItems) {
             const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
             if (code === inputID) {
+                console.log('進入二次請求');
                 response = await axios.get(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`,{
-                    headers: { Cookie: 'over18=18' }
+                    headers: { Cookie: 'over18=18', 'User-Agent': 'Android' }
                 });
                 $ = cheerio.load(response.data);
                 break;
