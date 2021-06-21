@@ -34,14 +34,16 @@ async function sendRandomVid(context) {
     // Get ID:
     const id = randomVid.children.find(child => child.type == 'text').data;
 
+    const preview = await getPreviewURL(id);
+
     // Get covers.
     const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
     const conetentID = randomVid.next.attribs.src.split('/').pop().split('ps.jpg')[0];
     console.log(randomVid.next.attribs.src);
     console.log(`https://videos.vpdmm.cc/litevideo/freepv/${conetentID[0]}/${conetentID[0]}${conetentID[1]}${conetentID[2]}/${conetentID}/${conetentID}_dm_w.mp4`);
 
-    await context.sendImage({
-        originalContentUrl: `https:${cover}`,
+    await context.sendVideo({
+        originalContentUrl: preview,
         previewImageUrl: `https:${cover}`,
     });
     await context.sendText(id);
@@ -55,21 +57,34 @@ async function sendRandomVid(context) {
 async function sendSingleVid(context) {
     const inputID = parameterize(context.event.text).toUpperCase();
 
-    const client = axios.create({
-        baseURL: `https://www.javbus.com/${inputID}`,
+    // Visit website.
+    let response = await axios.get(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
+        params: { keyword: inputID },
+        headers: { Cookie: 'over18=18',  }
     });
 
-    // Visit website.
-    const response = await client.get(`/`);
-
     const html = response.data;
-    const $ = cheerio.load(html);
+    let $ = cheerio.load(html);
+
+    const vidItems = $('.video > a');
+    if (vidItems.length > 1) {
+        for (let el of vidItems) {
+            const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
+            if (code === inputID) {
+                response = await axios.get(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`,{
+                    headers: { Cookie: 'over18=18' }
+                });
+                $ = cheerio.load(response.data);
+                break;
+            }
+        }
+    }
 
     // Get ID:
-    const id = $(`span[style='color:#CC0000;']`).text();
+    const id = $('#video_id .text').text();
 
     // Get covers.
-    const cover = `https://www.javbus.com${$('.bigImage > img').attr('src')}`;
+    const cover = `http:${$('#video_jacket_img').attr('src')}`;
 
     // Get preivew.
     const preview = await getPreviewURL(id);
@@ -141,14 +156,22 @@ async function sendHelp(context) {
 }
 
 async function getPreviewURL(id) {
-    const res = await got(`https://www.dmm.co.jp/search/=/searchstr=${id}`, {
-        headers: {
-            'user-agent': 'Android'
+    try {
+        let res = await got(`https://www.dmm.co.jp/search/=/searchstr=${id}`, {
+            headers: { 'user-agent': 'Android' }
+        });
+        const $ = cheerio.load(res.body);
+        let src = $('a.play-btn').attr('href');
+        if (src === undefined) {
+            src = `https://www.prestige-av.com/sample_movie/TKT${id}.mp4`;
+            
         }
-    });
-    const $ = cheerio.load(res.body);
-    return httpsUrl($('a.play-btn').attr('href'));
+        return httpsUrl(src.replace('_sm_w','_dmb_w'));
+    } catch (err) {
+        console.log(`錯誤訊息：${err}`);
+    }
 }
+
 
 module.exports = async function App() {
     return router([
