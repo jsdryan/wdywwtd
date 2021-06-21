@@ -72,10 +72,10 @@ async function sendSingleVid(context) {
             const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
             if (code === inputID) {
                 console.log('進入二次請求');
-                response = await axios.get(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`,{
-                    headers: { Cookie: 'over18=18', 'User-Agent': 'Android' }
+                response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
+                    headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
                 });
-                $ = cheerio.load(response.data);
+                $ = cheerio.load(response.body);
                 break;
             }
         }
