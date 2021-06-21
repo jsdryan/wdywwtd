@@ -84,7 +84,7 @@ async function sendSingleVid(context) {
     const id = $('#video_id .text').text();
 
     // Get covers.
-    const cover = `http:${$('#video_jacket_img').attr('src')}`;
+    const cover = `https:${$('#video_jacket_img').attr('src')}`;
 
     // Get preivew.
     const preview = await getPreviewURL(id);
