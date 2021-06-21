@@ -58,12 +58,12 @@ async function sendSingleVid(context) {
     const inputID = parameterize(context.event.text).toUpperCase();
 
     // Visit website.
-    let response = await axios.get(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
-        params: { keyword: inputID },
-        headers: { Cookie: 'over18=18',  }
+    let response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
+        searchParams: { keyword: inputID },
+        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android'  }
     });
 
-    const html = response.data;
+    const html = response.body;
     let $ = cheerio.load(html);
 
     const vidItems = $('.video > a');
