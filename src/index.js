@@ -166,7 +166,7 @@ async function getPreviewURL(id) {
             src = `https://www.prestige-av.com/sample_movie/TKT${id}.mp4`;
             
         }
-        return httpsUrl(src.replace('_sm_w','_dmb_w'));
+        return httpsUrl(src);
     } catch (err) {
         console.log(`錯誤訊息：${err}`);
     }
