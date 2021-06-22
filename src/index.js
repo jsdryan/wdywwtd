@@ -39,8 +39,6 @@ async function sendRandomVid(context) {
     // Get covers.
     const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
     const conetentID = randomVid.next.attribs.src.split('/').pop().split('ps.jpg')[0];
-    console.log(randomVid.next.attribs.src);
-    console.log(`https://videos.vpdmm.cc/litevideo/freepv/${conetentID[0]}/${conetentID[0]}${conetentID[1]}${conetentID[2]}/${conetentID}/${conetentID}_dm_w.mp4`);
 
     await context.sendVideo({
         originalContentUrl: preview,

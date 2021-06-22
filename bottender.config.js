@@ -1,6 +1,6 @@
 module.exports = {
   session: {
-    driver: 'memory',
+    driver: process.env.NODE_ENV === 'production' ? 'mongo' : 'memory',
     stores: {
       memory: {
         maxSize: 500,
@@ -15,7 +15,7 @@ module.exports = {
         db: 0,
       },
       mongo: {
-        url: 'mongodb+srv://charlottelatest:B4d8A7SCi6Eq@cluster0.pdny9.mongodb.net/wdywwtd?retryWrites=true&w=majority',
+        url: process.env.MONGODB_URI,
         collectionName: 'sessions',
       },
     },
