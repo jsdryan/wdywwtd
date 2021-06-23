@@ -34,11 +34,11 @@ async function sendRandomVid(context) {
     // Get ID:
     const id = randomVid.children.find(child => child.type == 'text').data;
 
+
     const preview = await getPreviewURL(id);
 
     // Get covers.
     const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
-    const conetentID = randomVid.next.attribs.src.split('/').pop().split('ps.jpg')[0];
 
     await context.sendVideo({
         originalContentUrl: preview,
@@ -51,6 +51,7 @@ async function sendRandomVid(context) {
         currentVidID: id
     });
 }
+
 
 async function sendSingleVid(context) {
     const inputID = parameterize(context.event.text).toUpperCase();
@@ -88,14 +89,21 @@ async function sendSingleVid(context) {
     // Get preivew.
     const preview = await getPreviewURL(id);
 
+    // Get cast.
+    const cast = $('#video_cast a').text();
+
+    // Get date.
+    const releaseDate = $('#video_date .text').text();
+
     console.log(`預覽：${preview}`);
     await context.sendVideo({
         originalContentUrl: preview,
         previewImageUrl: cover,
     });
+    await context.sendText(cast);
     await context.sendText(id);
-    await context.sendText(`https://jable.tv/videos/${id}/`);
-    await context.sendText(`https://www2.javhdporn.net/video/${id}/`);
+    await context.sendText(releaseDate);
+    await context.sendText(`https://jable.tv/videos/${id}/\n\nhttps://www2.javhdporn.net/video/${id}/`);
     context.setState({
         currentVidID: id
     });
@@ -163,11 +171,15 @@ async function getPreviewURL(id) {
         let src = $('a.play-btn').attr('href');
         if (src === undefined) {
             src = `https://www.prestige-av.com/sample_movie/TKT${id}.mp4`;
-            
+            await got(src);
         }
         return httpsUrl(src);
     } catch (err) {
-        console.log(`錯誤訊息：${err}`);
+        if (err.response.statusCode === 404) {
+            src = `https://www.prestige-av.com/sample_movie/${id}.mp4`;
+            console.log('404');
+            return httpsUrl(src);
+        }
     }
 }
 
