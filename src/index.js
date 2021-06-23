@@ -183,10 +183,28 @@ async function getPreviewURL(id) {
 }
 
 async function test(context) {
-    const res = await got('http://www.javlibrary.com/tw/?v=javme5ly7q', {
-        headers: { 'cookie': 'over18=18' }
+    const inputID = 'SSIS-129';
+    let response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
+        searchParams: { keyword: inputID },
+        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android'  }
     });
-    const $ = cheerio.load(res.body);
+    let $ = cheerio.load(response.body);
+
+    const vidItems = $('.video > a');
+    if (vidItems.length > 1) {
+        for (let el of vidItems) {
+            const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
+            if (code === inputID) {
+                console.log('進入二次請求');
+                response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
+                    headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
+                });
+                $ = cheerio.load(response.body);
+                break;
+            }
+        }
+    }
+
     const id = $('#video_id .text').text();
     console.log(id);
 }
