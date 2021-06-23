@@ -191,22 +191,23 @@ async function test(context) {
     let $ = cheerio.load(response.body);
 
     const vidItems = $('.video > a');
-    if (vidItems.length > 1) {
-        for (let el of vidItems) {
-            const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
-            if (code === inputID) {
-                console.log('進入二次請求');
-                response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
-                    headers: { 'cookie': 'over18=18' }
-                });
-                $ = cheerio.load(response.body);
-                break;
-            }
-        }
-    }
+    // if (vidItems.length > 1) {
+    //     for (let el of vidItems) {
+    //         const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
+    //         if (code === inputID) {
+    //             console.log('進入二次請求');
+    //             response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
+    //                 headers: { 'cookie': 'over18=18' }
+    //             });
+    //             $ = cheerio.load(response.body);
+    //             break;
+    //         }
+    //     }
+    // }
 
-    const id = $('#video_id .text').text();
-    console.log(id);
+    // const id = $('#video_id .text').text();
+
+    console.log(vidItems.length);
 }
 
 
