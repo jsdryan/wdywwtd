@@ -186,7 +186,7 @@ async function test(context) {
     const inputID = 'SSIS-129';
     let response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
         searchParams: { keyword: inputID },
-        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android'  }
+        headers: { 'Cookie': 'over18=18' }
     });
     let $ = cheerio.load(response.body);
 
@@ -197,7 +197,7 @@ async function test(context) {
             if (code === inputID) {
                 console.log('進入二次請求');
                 response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
-                    headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
+                    headers: { 'cookie': 'over18=18' }
                 });
                 $ = cheerio.load(response.body);
                 break;
