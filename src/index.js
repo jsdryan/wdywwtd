@@ -182,6 +182,15 @@ async function getPreviewURL(id) {
     }
 }
 
+async function test(context) {
+    const res = await got('http://www.javlibrary.com/tw/?v=javme5ly7q', {
+        headers: { 'cookie': 'over18=18' }
+    });
+    const $ = cheerio.load(res.body);
+    const id = $('#video_id .text').text();
+    console.log(id);
+}
+
 
 module.exports = async function App() {
     return router([
@@ -190,6 +199,7 @@ module.exports = async function App() {
         text(/^收藏$/, like),
         text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, likeSpecific),
         text(/^我的收藏$/, myLikes),
+        text(/^測試$/, test),
         // route('*', sendHelp),
     ]);
 };
