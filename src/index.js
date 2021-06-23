@@ -184,12 +184,11 @@ async function getPreviewURL(id) {
 
 async function test(context) {
     const inputID = 'SSIS-129';
-    let response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
+    let response = await got(`https://www.k51r.com/tw/vl_searchbyid.php`, {
         searchParams: { keyword: inputID },
-        headers: { 'Cookie': 'over18=18', 'anonymous': true }
+        headers: { 'Cookie': 'over18=18' }
     });
     let $ = cheerio.load(response.body);
-
     const vidItems = $('.video > a');
     // if (vidItems.length > 1) {
     //     for (let el of vidItems) {
