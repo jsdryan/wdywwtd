@@ -17,7 +17,7 @@ async function sendRandomVid(context) {
     const randomPageNum = 1 + Math.floor(Math.random() * 25);
 
     // Visit website.
-    const response = await client.get(`/vl_mostwanted.php`, {
+    let response = await client.get(`/vl_mostwanted.php`, {
         params: { mode: '1', page: randomPageNum },
         headers: { Cookie: 'over18=18' }
     });
@@ -33,7 +33,6 @@ async function sendRandomVid(context) {
 
     // Get ID:
     const id = randomVid.children.find(child => child.type == 'text').data;
-
 
     const preview = await getPreviewURL(id);
 
