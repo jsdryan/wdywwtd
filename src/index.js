@@ -8,6 +8,8 @@ const httpsUrl = require('https-url');
 // const MongoSessionStore = require('bottender');
 
 async function sendRandomVid(context) {
+    const { displayName } = await context.getUserProfile();
+
     const client = axios.create({
         baseURL: 'http://www.javlibrary.com/tw',
         withCredentials: true,
@@ -49,6 +51,7 @@ async function sendRandomVid(context) {
     context.setState({
         currentVidID: id
     });
+    console.log(`「${displayName}」抽了${id}`);
 }
 
 
@@ -186,7 +189,7 @@ async function test(context) {
     const inputID = 'SSIS-129';
     let response = await got(`https://www.k51r.com/tw/vl_searchbyid.php`, {
         searchParams: { keyword: inputID },
-        headers: { 'Cookie': 'over18=18' }
+        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android' }
     });
     let $ = cheerio.load(response.body);
     const vidItems = $('.video > a');
