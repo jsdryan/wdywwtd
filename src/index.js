@@ -186,7 +186,7 @@ async function test(context) {
     const inputID = 'SSIS-129';
     let response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
         searchParams: { keyword: inputID },
-        headers: { 'Cookie': 'over18=18' }
+        headers: { 'Cookie': 'over18=18', 'anonymous': true }
     });
     let $ = cheerio.load(response.body);
 
