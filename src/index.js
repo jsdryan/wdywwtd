@@ -8,7 +8,7 @@ const httpsUrl = require('https-url');
 // const MongoSessionStore = require('bottender');
 
 async function sendRandomVid(context) {
-    const { displayName } = await context.getUserProfile();
+    // const { displayName } = await context.getUserProfile();
 
     const client = axios.create({
         baseURL: 'http://www.javlibrary.com/tw',
@@ -25,7 +25,7 @@ async function sendRandomVid(context) {
     });
 
     const html = response.data;
-    const $ = cheerio.load(html);
+    let $ = cheerio.load(html);
     const vidsElems = $('.video > a > .id');
     const vidsLength = vidsElems.length;
     const randomVidsNum = Math.floor(Math.random() * vidsLength);
@@ -36,22 +36,54 @@ async function sendRandomVid(context) {
     // Get ID:
     const id = randomVid.children.find(child => child.type == 'text').data;
 
+    // Visit website.
+    response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
+        searchParams: { keyword: id },
+        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android'  }
+    });
+
+    $ = cheerio.load(response.body);
+
+    const vidItems = $('.video > a');
+    if (vidItems.length > 1) {
+        for (let el of vidItems) {
+            const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
+            if (code === id) {
+                console.log('進入二次請求');
+                response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
+                    headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
+                });
+                $ = cheerio.load(response.body);
+                break;
+            }
+        }
+    }
+
+    // Get preivew.
     const preview = await getPreviewURL(id);
+
+    // Get cast.
+    const cast = $('#video_cast a').text();
+
+    // Get date.
+    const releaseDate = $('#video_date .text').text();
 
     // Get covers.
     const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
 
+    console.log(`預覽：${preview}`);
     await context.sendVideo({
         originalContentUrl: preview,
-        previewImageUrl: `https:${cover}`,
+        previewImageUrl: cover,
     });
+    await context.sendText(cast);
     await context.sendText(id);
-    await context.sendText(`https://jable.tv/videos/${id}/`);
-    await context.sendText(`https://www2.javhdporn.net/video/${id}/`);
+    await context.sendText(releaseDate);
+    await context.sendText(`https://jable.tv/videos/${id}/\n\nhttps://www2.javhdporn.net/video/${id}/`);
     context.setState({
         currentVidID: id
     });
-    console.log(`「${displayName}」抽了${id}`);
+    // console.log(`「${displayName}」抽了${id}`);
 }
 
 
