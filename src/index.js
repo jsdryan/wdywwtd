@@ -69,7 +69,7 @@ async function sendRandomVid(context) {
     const releaseDate = $('#video_date .text').text();
 
     // Get covers.
-    const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
+    const cover = `https${randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg')}`;
 
     console.log(`預覽：${preview}`);
     await context.sendVideo({
