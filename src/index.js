@@ -94,8 +94,7 @@ async function sendInfoByMetaData(metaData, context) {
     await context.sendText(`番號：${vidId}`);
     await context.sendText(`演員：${casts}`);
     await context.sendText(`發行日：${releaseDate}`);
-    await context.sendText(`片源 1：https://jable.tv/videos/${vidId}/`);
-    await context.sendText(`片源 2：https://www2.javhdporn.net/video/${vidId}/`);
+    await context.sendText(`片源 1：https://jable.tv/videos/${vidId}/\n\n片源 2：https://www2.javhdporn.net/video/${vidId}/`);
 
     context.setState({ currentVidID: vidId });
 }
