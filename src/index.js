@@ -27,6 +27,9 @@ async function getSpecificMetaDataById(vidId) {
     });
 
     let $ = cheerio.load(response.body);
+    if ($('em').text() === '搜尋沒有結果。') {
+        throw `沒有「${vidId}」這部片子。`;
+    }
     const vidItems = $('.video > a');
 
     if (vidItems.length > 1) {
@@ -42,6 +45,7 @@ async function getSpecificMetaDataById(vidId) {
             }
         }
     }
+
     return {
         vidId: vidId,
         cover: `https:${$('#video_jacket_img').attr('src')}`,
@@ -99,10 +103,40 @@ async function sendInfoByMetaData(metaData, context) {
     context.setState({ currentVidID: vidId });
 }
 
+async function disLike(context) {
+    const { text } = context.event;
+    const { displayName } = { displayName: '包子' };
+    const data = context.state.collectors;
+    const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
+        .toUpperCase();
+        console.log(`vidId: ${vidId}`);
+    if (data.length !== 0) {
+        const index = data.findIndex(person => person.likes === vidId);
+        if (index > -1) {
+            data.splice(index, 1);
+        } else {
+            return sendHelp(`您目前沒有收藏「${vidId}」喔。`, context);
+        }
+        context.setState({
+            currentVidID: vidId,
+            collectors: data
+        });
+        console.log(context.state.collectors);
+    } else {
+        return sendHelp(`您目前沒有收藏任何片子，沒有東西可讓您移除喔。`, context);
+    }
+}
+
 async function like(context) {
-    const { displayName } = await context.getUserProfile();
+    const { displayName } = { displayName: '包子' };
+    const vidId = context.state.currentVidID;
+    // const { displayName } = await context.getUserProfile();
+    try {
+        await getSpecificMetaDataById(vidId);
+    } catch (error) {
+        return sendHelp(``, context);
+    }
     if (context.state.currentVidID !== '') {
-        const vidId = context.state.currentVidID;
         context.setState({
             currentVidID: vidId,
             collectors: [
@@ -116,48 +150,83 @@ async function like(context) {
         await context.sendText(`你收藏了「${vidId}」`);
         console.log(context.state);
     } else {
-        return sendHelp(context);
+        return sendHelp('請輸入「抽」或特定番號（例如：SSNI-001）。', context);
     }
 }
 
 async function likeSpecific(context) {
     const { text } = context.event;
-    const { displayName } = await context.getUserProfile();
+    // const { displayName } = await context.getUserProfile();
+    const { displayName } = { displayName: '包子' };
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
         .toUpperCase();
-    context.setState({
-        collectors: [
-            ...context.state.collectors,
-            {
-                name: displayName,
-                likes: vidId.trim(),
-            }
-        ]
-    });
-    await context.sendText(`你收藏了「${vidId}」`);
+    try {
+        await getSpecificMetaDataById(vidId);
+
+        context.setState({
+            collectors: [
+                ...context.state.collectors,
+                {
+                    name: displayName,
+                    likes: vidId.trim(),
+                }
+            ]
+        });
+        await context.sendText(`你收藏了「${vidId}」`);
+    } catch (error) {
+        return sendHelp(error, context);
+    }
 }
 
 async function myLikes(context) {
-    const { displayName } = await context.getUserProfile();
+    // const { displayName } = await context.getUserProfile();
+    const { displayName } = { displayName: '包子' };
     await context.sendText(`我的收藏：`);
     const data = context.state.collectors;
     const likesArr = _.map(_.mapValues(_.groupBy(data, 'name'), o => o.map(like => _.omit(like, 'name')))[`${displayName}`], 'likes');
-
-    await context.sendText(likesArr.join('\n'));
+    if (data.length === 0) {
+        return sendHelp(`您目前沒有收藏任何片子喔，可在抽完片子後輸入「收藏」來收藏該片，或直接輸入「收藏SSIS-129」收藏特定番號。`, context);
+    } else {
+        await context.sendText(likesArr.join('\n'));
+    }
 }
 
-async function sendHelp(context) {
-    await context.sendText(`請輸入「抽」或特定番號（例如：SSNI-001）。`);
+async function sendHelp(msg, context) {
+    await context.sendText(`${msg}`);
 }
 
 async function getPreviewURLById(vidId) {
+    const DMMURL = 'https://www.dmm.co.jp';
     try {
         let res =
-            await got(`https://www.dmm.co.jp/search/=/searchstr=${vidId}`, {
+            await got(`${DMMURL}/search/=/searchstr=${vidId}`, {
                 headers: { 'user-agent': 'Android' }
         });
-        const $ = cheerio.load(res.body);
-        let src = $('a.play-btn').attr('href');
+        let src = '';
+        let $ = cheerio.load(res.body);
+        const pageText = $('.count-page').text().split('／')[2] || 1;
+        if (typeof(pageText) === 'string') {
+            console.log('Cid 解析');
+            const totalPage = Number(pageText[0]);
+            const lowerVidsId = `${vidId.split('-')[0]}${vidId.split('-')[1]}`.toLowerCase();
+            const formattedVid = `^${lowerVidsId}{1}$`;
+            const cidRegex = new RegExp(formattedVid);
+            for ( var i = 1; i <= totalPage; i++ ) {
+                const url = `${DMMURL}/search/=/searchstr=${vidId}/page=${i}/`;
+                console.log(url);
+                res = await got(url, { headers: { 'user-agent': 'Android' } });
+                let $ = cheerio.load(res.body);
+                _.forEach($('a.play-btn'), function (value, key) {
+                    const cid = value.attribs.cid;
+                    if (cidRegex.test(cid)) {
+                        src = value.attribs.href
+                        return false;
+                    }
+                });
+            }
+        } else {
+            src = $('a.play-btn').attr('href');
+        }
         if (src === undefined) {
             src = `https://www.prestige-av.com/sample_movie/TKT${vidId}.mp4`;
             await got(src);
@@ -178,9 +247,21 @@ async function sendRandomVid(context) {
 }
 
 async function sendSpecificVid(context) {
-    const vidId = parameterize(context.event.text).toUpperCase();
-    const metaData = await getSpecificMetaDataById(vidId);
-    await sendInfoByMetaData(metaData, context);
+    try {
+        const vidId = parameterize(context.event.text).toUpperCase();
+        const metaData = await getSpecificMetaDataById(vidId);
+        await sendInfoByMetaData(metaData, context);
+    } catch (error) {
+        return sendHelp(error, context);
+    }
+}
+
+async function test(context) {
+    try {
+        got(`https://www.javlibrary.com/tw/vl_searchbyid.php?keyword=iii-555`);
+    } catch(err) {
+        console.log(err);
+    }
 }
 
 module.exports = async function App() {
@@ -188,7 +269,9 @@ module.exports = async function App() {
         text(/^抽{1}$/, sendRandomVid),
         text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVid),
         text(/^收藏$/, like),
+        text(/^測試$/, test),
         text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, likeSpecific),
+        text(/^移除\s?[A-Za-z]+[\s\-]?\d+$/, disLike),
         text(/^我的收藏$/, myLikes),
         // route('*', sendHelp),
     ]);
