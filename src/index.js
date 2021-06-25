@@ -1,79 +1,40 @@
-const { router, route, text } = require('bottender/router');
-const axios = require('axios');
+const { router, text } = require('bottender/router');
 const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
 const httpsUrl = require('https-url');
-// const MongoSessionStore = require('bottender');
 
-async function sendRandomVid(context) {
-    const { displayName } = await context.getUserProfile();
-
-    const client = axios.create({
-        baseURL: 'http://www.javlibrary.com/tw',
-        withCredentials: true,
-    });
-
-    // Generate a random page number for Javlibrary Most Wanted Page.
-    const randomPageNum = 1 + Math.floor(Math.random() * 25);
-
-    // Visit website.
-    let response = await client.get(`/vl_mostwanted.php`, {
-        params: { mode: '1', page: randomPageNum },
-        headers: { Cookie: 'over18=18' }
-    });
-
-    const html = response.data;
-    const $ = cheerio.load(html);
-    const vidsElems = $('.video > a > .id');
-    const vidsLength = vidsElems.length;
-    const randomVidsNum = Math.floor(Math.random() * vidsLength);
-    const randomVid = vidsElems[randomVidsNum];
-
-    // console.log(`Page: ${randomPageNum}, Item: ${randomVidsNum + 1}`);
-
-    // Get ID:
-    const id = randomVid.children.find(child => child.type == 'text').data;
-
-    const preview = await getPreviewURL(id);
-
-    // Get covers.
-    const cover = randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg');
-
-    await context.sendVideo({
-        originalContentUrl: preview,
-        previewImageUrl: `https:${cover}`,
-    });
-    await context.sendText(id);
-    await context.sendText(`https://jable.tv/videos/${id}/`);
-    await context.sendText(`https://www2.javhdporn.net/video/${id}/`);
-    context.setState({
-        currentVidID: id
-    });
-    console.log(`「${displayName}」抽了${id}`);
+async function getCastsByElem(castElem) {
+    let casts = '';
+    if (castElem.length > 1) {
+        for (var i = 0; i < castElem.length; i++) {
+            casts += castElem[i].children
+                .find(child => child.type == 'text')
+                .data;
+            if (i < castElem.length - 1) { casts += '、' }
+        }
+    }
+    return casts　|| castElem.text();
 }
 
-
-async function sendSingleVid(context) {
-    const inputID = parameterize(context.event.text).toUpperCase();
-
-    // Visit website.
-    let response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
-        searchParams: { keyword: inputID },
-        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android'  }
+async function getSpecificMetaDataById(vidId) {
+    const javlibraryTwURL = 'https://www.javlibrary.com/tw';
+    
+    let response = await got(`${javlibraryTwURL}/vl_searchbyid.php`, {
+        searchParams: { keyword: vidId },
+        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android' }
     });
 
-    const html = response.body;
-    let $ = cheerio.load(html);
-
+    let $ = cheerio.load(response.body);
     const vidItems = $('.video > a');
+
     if (vidItems.length > 1) {
         for (let el of vidItems) {
             const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
-            if (code === inputID) {
-                console.log('進入二次請求');
-                response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
+            if (code === vidId) {
+                console.log(`「${vidId}」有${vidItems.length}筆資料，選定 ${javlibraryTwURL}${el.attribs.href.split('./')[1]} 頁面進行解析中…`)
+                response = await got(`${javlibraryTwURL}${el.attribs.href.split('./')[1]}`, {
                     headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
                 });
                 $ = cheerio.load(response.body);
@@ -81,51 +42,80 @@ async function sendSingleVid(context) {
             }
         }
     }
+    return {
+        vidId: vidId,
+        cover: `https:${$('#video_jacket_img').attr('src')}`,
+        casts: await getCastsByElem($('#video_cast a')),
+        releaseDate: $('#video_date .text').text()
+    }
+}
 
-    // Get ID:
-    const id = $('#video_id .text').text();
+async function getRandomMetaData() {
+    const javlibraryTwURL = 'https://www.javlibrary.com/tw';
 
-    // Get covers.
-    const cover = `https:${$('#video_jacket_img').attr('src')}`;
+    let response;
+    let $;
 
-    // Get preivew.
-    const preview = await getPreviewURL(id);
+    const randomPageNum = _.random(1, 25);
 
-    // Get cast.
-    const cast = $('#video_cast a').text();
+    // Get randomized video page.
+    response = await got(`${javlibraryTwURL}/vl_mostwanted.php`, {
+        searchParams: { mode: 1, page: randomPageNum },
+        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android' }
+    });
 
-    // Get date.
-    const releaseDate = $('#video_date .text').text();
+    $ = cheerio.load(response.body);
+    const vidsElems = $('.video > a > .id');
+    const vidsQTY = vidsElems.length;
+    const randomVidsNum = _.random(1, vidsQTY);
+    const randomVid = vidsElems[randomVidsNum];
+    const vidId = randomVid.children
+        .find(child => child.type == 'text')
+        .data
+    
+    console.log(`正在取得「${vidId}」的資料`);
 
-    console.log(`預覽：${preview}`);
+    // Get specific video page, for fetching meta data sake.
+    const specificMetaData = await getSpecificMetaDataById(vidId);
+    
+    return specificMetaData;
+}
+
+async function sendInfoByMetaData(metaData, context) {
+    const vidId = metaData.vidId;
+    const trailerURL = await getPreviewURLById(vidId);
+    const coverURL = metaData.cover;
+    const casts = metaData.casts;
+    const releaseDate = metaData.releaseDate;
+
     await context.sendVideo({
-        originalContentUrl: preview,
-        previewImageUrl: cover,
+        originalContentUrl: trailerURL,
+        previewImageUrl: coverURL,
     });
-    await context.sendText(cast);
-    await context.sendText(id);
-    await context.sendText(releaseDate);
-    await context.sendText(`https://jable.tv/videos/${id}/\n\nhttps://www2.javhdporn.net/video/${id}/`);
-    context.setState({
-        currentVidID: id
-    });
+    await context.sendText(`番號：${vidId}`);
+    await context.sendText(`演員：${casts}`);
+    await context.sendText(`發行日：${releaseDate}`);
+    await context.sendText(`片源 1：https://jable.tv/videos/${vidId}/`);
+    await context.sendText(`片源 2：https://www2.javhdporn.net/video/${vidId}/`);
+
+    context.setState({ currentVidID: vidId });
 }
 
 async function like(context) {
     const { displayName } = await context.getUserProfile();
     if (context.state.currentVidID !== '') {
-        const id = context.state.currentVidID;
+        const vidId = context.state.currentVidID;
         context.setState({
-            currentVidID: id,
+            currentVidID: vidId,
             collectors: [
                 ...context.state.collectors,
                 {
                     name: displayName,
-                    likes: id.trim(),
+                    likes: vidId.trim(),
                 }
             ],
         });
-        await context.sendText(`你收藏了「${id}」`);
+        await context.sendText(`你收藏了「${vidId}」`);
         console.log(context.state);
     } else {
         return sendHelp(context);
@@ -135,28 +125,26 @@ async function like(context) {
 async function likeSpecific(context) {
     const { text } = context.event;
     const { displayName } = await context.getUserProfile();
-    const id = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0]).toUpperCase();
+    const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
+        .toUpperCase();
     context.setState({
         collectors: [
             ...context.state.collectors,
             {
                 name: displayName,
-                likes: id.trim(),
+                likes: vidId.trim(),
             }
         ]
     });
-    await context.sendText(`你收藏了「${id}」`);
+    await context.sendText(`你收藏了「${vidId}」`);
 }
 
 async function myLikes(context) {
     const { displayName } = await context.getUserProfile();
-    await context.sendText(`${displayName}的收藏：`);
+    await context.sendText(`我的收藏：`);
     const data = context.state.collectors;
     const likesArr = _.map(_.mapValues(_.groupBy(data, 'name'), o => o.map(like => _.omit(like, 'name')))[`${displayName}`], 'likes');
 
-    // _.forEach(likesArr, async function(like) {
-    //     await context.sendText(like);
-    // })
     await context.sendText(likesArr.join('\n'));
 }
 
@@ -164,63 +152,46 @@ async function sendHelp(context) {
     await context.sendText(`請輸入「抽」或特定番號（例如：SSNI-001）。`);
 }
 
-async function getPreviewURL(id) {
+async function getPreviewURLById(vidId) {
     try {
-        let res = await got(`https://www.dmm.co.jp/search/=/searchstr=${id}`, {
-            headers: { 'user-agent': 'Android' }
+        let res =
+            await got(`https://www.dmm.co.jp/search/=/searchstr=${vidId}`, {
+                headers: { 'user-agent': 'Android' }
         });
         const $ = cheerio.load(res.body);
         let src = $('a.play-btn').attr('href');
         if (src === undefined) {
-            src = `https://www.prestige-av.com/sample_movie/TKT${id}.mp4`;
+            src = `https://www.prestige-av.com/sample_movie/TKT${vidId}.mp4`;
             await got(src);
         }
         return httpsUrl(src);
     } catch (err) {
         if (err.response.statusCode === 404) {
-            src = `https://www.prestige-av.com/sample_movie/${id}.mp4`;
+            src = `https://www.prestige-av.com/sample_movie/${vidId}.mp4`;
             console.log('404');
             return httpsUrl(src);
         }
     }
 }
 
-async function test(context) {
-    const inputID = 'SSIS-129';
-    let response = await got(`https://www.k51r.com/tw/vl_searchbyid.php`, {
-        searchParams: { keyword: inputID },
-        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android' }
-    });
-    let $ = cheerio.load(response.body);
-    const vidItems = $('.video > a');
-    // if (vidItems.length > 1) {
-    //     for (let el of vidItems) {
-    //         const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
-    //         if (code === inputID) {
-    //             console.log('進入二次請求');
-    //             response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
-    //                 headers: { 'cookie': 'over18=18' }
-    //             });
-    //             $ = cheerio.load(response.body);
-    //             break;
-    //         }
-    //     }
-    // }
-
-    // const id = $('#video_id .text').text();
-
-    console.log(vidItems.length);
+async function sendRandomVid(context) {
+    const metaData = await getRandomMetaData();
+    await sendInfoByMetaData(metaData, context);
 }
 
+async function sendSpecificVid(context) {
+    const vidId = parameterize(context.event.text).toUpperCase();
+    const metaData = await getSpecificMetaDataById(vidId);
+    await sendInfoByMetaData(metaData, context);
+}
 
 module.exports = async function App() {
     return router([
         text(/^抽{1}$/, sendRandomVid),
-        text(/^[A-Za-z]+[\s\-]?\d+$/, sendSingleVid),
+        text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVid),
         text(/^收藏$/, like),
         text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, likeSpecific),
         text(/^我的收藏$/, myLikes),
-        text(/^測試$/, test),
         // route('*', sendHelp),
     ]);
 };
