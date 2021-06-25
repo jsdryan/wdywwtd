@@ -5,7 +5,6 @@ const _ = require('lodash');
 const got = require('got');
 const httpsUrl = require('https-url');
 
-<<<<<<< HEAD
 async function getCastsByElem(castElem) {
     let casts = '';
     if (castElem.length > 1) {
@@ -17,85 +16,6 @@ async function getCastsByElem(castElem) {
         }
     }
     return casts　|| castElem.text();
-=======
-async function sendRandomVid(context) {
-    // const { displayName } = await context.getUserProfile();
-
-    const client = axios.create({
-        baseURL: 'http://www.javlibrary.com/tw',
-        withCredentials: true,
-    });
-
-    // Generate a random page number for Javlibrary Most Wanted Page.
-    const randomPageNum = 1 + Math.floor(Math.random() * 25);
-
-    // Visit website.
-    let response = await client.get(`/vl_mostwanted.php`, {
-        params: { mode: '1', page: randomPageNum },
-        headers: { Cookie: 'over18=18' }
-    });
-
-    const html = response.data;
-    let $ = cheerio.load(html);
-    const vidsElems = $('.video > a > .id');
-    const vidsLength = vidsElems.length;
-    const randomVidsNum = Math.floor(Math.random() * vidsLength);
-    const randomVid = vidsElems[randomVidsNum];
-
-    // console.log(`Page: ${randomPageNum}, Item: ${randomVidsNum + 1}`);
-
-    // Get ID:
-    const id = randomVid.children.find(child => child.type == 'text').data;
-
-    // Visit website.
-    response = await got(`http://www.javlibrary.com/tw/vl_searchbyid.php`, {
-        searchParams: { keyword: id },
-        headers: { 'Cookie': 'over18=18', 'user-agent': 'Android'  }
-    });
-
-    $ = cheerio.load(response.body);
-
-    const vidItems = $('.video > a');
-    if (vidItems.length > 1) {
-        for (let el of vidItems) {
-            const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
-            if (code === id) {
-                console.log('進入二次請求');
-                response = await got(`https://www.javlibrary.com/tw${el.attribs.href.split('./')[1]}`, {
-                    headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
-                });
-                $ = cheerio.load(response.body);
-                break;
-            }
-        }
-    }
-
-    // Get preivew.
-    const preview = await getPreviewURL(id);
-
-    // Get cast.
-    const cast = $('#video_cast a').text();
-
-    // Get date.
-    const releaseDate = $('#video_date .text').text();
-
-    // Get covers.
-    const cover = `https:${randomVid.next.attribs.src.replace(/ps.jpg/i, 'pl.jpg')}`;
-
-    console.log(`預覽：${preview}`);
-    await context.sendVideo({
-        originalContentUrl: preview,
-        previewImageUrl: cover,
-    });
-    await context.sendText(cast);
-    await context.sendText(id);
-    await context.sendText(releaseDate);
-    await context.sendText(`https://jable.tv/videos/${id}/\n\nhttps://www2.javhdporn.net/video/${id}/`);
-    context.setState({
-        currentVidID: id
-    });
-    // console.log(`「${displayName}」抽了${id}`);
->>>>>>> 45f05a63dcc174ada90321cc78ebea95aa19c15d
 }
 
 async function getSpecificMetaDataById(vidId) {
@@ -146,8 +66,7 @@ async function getRandomMetaData() {
 
     $ = cheerio.load(response.body);
     const vidsElems = $('.video > a > .id');
-    const vidsQTY = vidsElems.length;
-    const randomVidsNum = _.random(1, vidsQTY);
+    const randomVidsNum = _.random(0, 19);
     const randomVid = vidsElems[randomVidsNum];
     const vidId = randomVid.children
         .find(child => child.type == 'text')
