@@ -104,8 +104,8 @@ async function sendInfoByMetaData(metaData, context) {
 }
 
 async function disLike(context) {
+    const { displayName } = await context.getUserProfile();
     const { text } = context.event;
-    const { displayName } = { displayName: '包子' };
     const data = context.state.collectors;
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
         .toUpperCase();
@@ -128,9 +128,8 @@ async function disLike(context) {
 }
 
 async function like(context) {
-    const { displayName } = { displayName: '包子' };
     const vidId = context.state.currentVidID;
-    // const { displayName } = await context.getUserProfile();
+    const { displayName } = await context.getUserProfile();
     try {
         await getSpecificMetaDataById(vidId);
     } catch (error) {
@@ -156,8 +155,7 @@ async function like(context) {
 
 async function likeSpecific(context) {
     const { text } = context.event;
-    // const { displayName } = await context.getUserProfile();
-    const { displayName } = { displayName: '包子' };
+    const { displayName } = await context.getUserProfile();
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
         .toUpperCase();
     try {
@@ -179,8 +177,7 @@ async function likeSpecific(context) {
 }
 
 async function myLikes(context) {
-    // const { displayName } = await context.getUserProfile();
-    const { displayName } = { displayName: '包子' };
+    const { displayName } = await context.getUserProfile();
     await context.sendText(`我的收藏：`);
     const data = context.state.collectors;
     const likesArr = _.map(_.mapValues(_.groupBy(data, 'name'), o => o.map(like => _.omit(like, 'name')))[`${displayName}`], 'likes');
