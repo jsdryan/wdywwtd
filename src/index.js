@@ -118,6 +118,7 @@ async function disLike(context) {
                 currentVidID: vidId,
                 collectors: data
             });
+            await context.sendText(`你移除了「${vidId}」`);
             await myLikes(context);
         } else {
             return sendHelp(`您目前沒有收藏「${vidId}」喔。`, context);
@@ -179,7 +180,6 @@ async function likeSpecific(context) {
 
 async function myLikes(context) {
     const { displayName } = await context.getUserProfile();
-    await context.sendText(`我的收藏：`);
     const data = context.state.collectors;
     const likesArr = _.map(_.mapValues(_.groupBy(data, 'name'), o => o.map(like => _.omit(like, 'name')))[`${displayName}`], 'likes');
     if (data.length === 0) {
