@@ -111,17 +111,17 @@ async function disLike(context) {
         .toUpperCase();
         console.log(`vidId: ${vidId}`);
     if (data.length !== 0) {
-        const index = data.findIndex(person => person.likes === vidId);
+        const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
         if (index > -1) {
             data.splice(index, 1);
+            context.setState({
+                currentVidID: vidId,
+                collectors: data
+            });
+            await myLikes(context);
         } else {
             return sendHelp(`您目前沒有收藏「${vidId}」喔。`, context);
         }
-        context.setState({
-            currentVidID: vidId,
-            collectors: data
-        });
-        console.log(context.state.collectors);
     } else {
         return sendHelp(`您目前沒有收藏任何片子，沒有東西可讓您移除喔。`, context);
     }
@@ -147,6 +147,7 @@ async function like(context) {
             ],
         });
         await context.sendText(`你收藏了「${vidId}」`);
+        await myLikes(context);
         console.log(context.state);
     } else {
         return sendHelp('請輸入「抽」或特定番號（例如：SSNI-001）。', context);
