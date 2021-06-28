@@ -212,6 +212,16 @@ async function sendInfoByMetaData(metaData, context) {
                     }
                 },
                 {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "message",
+                        "label": "❤ 我喜歡",
+                        "text": "收藏"
+                    }
+                },
+                {
                     "type": "spacer",
                     "size": "sm"
                 }
@@ -309,7 +319,7 @@ async function myLikes(context) {
                     "contents": [
                         {
                             "type": "text",
-                            "text": value.date || new Date().toISOString().split('T')[0],
+                            "text": value.date,
                             "size": "sm",
                             "color": "#999999",
                             "margin": "none",
@@ -352,7 +362,7 @@ async function myLikes(context) {
                             {
                                 "type": "text",
                                 "text": "收藏日期",
-                                "size": "sm",
+                                "size": "md",
                                 "margin": "none",
                                 "flex": 5,
                                 "weight": "bold",
@@ -362,7 +372,7 @@ async function myLikes(context) {
                             {
                                 "type": "text",
                                 "text": "收藏番號",
-                                "size": "sm",
+                                "size": "md",
                                 "margin": "none",
                                 "flex": 5,
                                 "align": "center",
@@ -375,8 +385,8 @@ async function myLikes(context) {
                     {
                         "type": "box",
                         "layout": "vertical",
-                        "margin": "lg",
-                        "spacing": "sm",
+                        "margin": "xxl",
+                        "spacing": "md",
                         "contents": [...flexContent]
                     }
                 ]
