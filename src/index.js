@@ -90,28 +90,146 @@ async function sendInfoByMetaData(metaData, context) {
     const coverURL = metaData.cover;
     const casts = metaData.casts;
     const releaseDate = metaData.releaseDate;
+    const source1 = `https://jable.tv/videos/${vidId}/`;
+    const source2 = `https://www2.javhdporn.net/video/${vidId}/`;
 
-    await context.sendVideo({
-        originalContentUrl: trailerURL,
-        previewImageUrl: coverURL,
+    await context.sendFlex(`「${vidId}」影片資訊。`, {
+        "type": "bubble",
+        "size": "kilo",
+        "hero": {
+            "type": "image",
+            "url": coverURL,
+            "size": "full",
+            "aspectRatio": "20:13",
+            "aspectMode": "cover",
+            "action": {
+                "type": "uri",
+                "uri": coverURL
+            }
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {
+                    "type": "text",
+                    "text": vidId,
+                    "weight": "bold",
+                    "size": "xl",
+                    "align": "center"
+                },
+                {
+                    "type": "box",
+                    "layout": "vertical",
+                    "margin": "lg",
+                    "spacing": "sm",
+                    "contents": [
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": "演員",
+                                    "color": "#aaaaaa",
+                                    "size": "md",
+                                    "flex": 5,
+                                    "align": "center"
+                                },
+                                {
+                                    "type": "text",
+                                    "text": casts,
+                                    "color": "#666666",
+                                    "size": "md",
+                                    "flex": 5,
+                                    "align": "center",
+                                    "wrap": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": "box",
+                            "layout": "baseline",
+                            "spacing": "sm",
+                            "contents": [
+                                {
+                                    "type": "text",
+                                    "text": "發行日",
+                                    "color": "#aaaaaa",
+                                    "size": "md",
+                                    "flex": 5,
+                                    "align": "center"
+                                },
+                                {
+                                    "type": "text",
+                                    "text": releaseDate,
+                                    "color": "#666666",
+                                    "size": "md",
+                                    "flex": 5,
+                                    "align": "center",
+                                    "wrap": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "uri",
+                        "label": "預告片",
+                        "uri": trailerURL
+                    }
+                },
+                {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "uri",
+                        "label": "片源 1",
+                        "uri": source1
+                    }
+                },
+                {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "uri",
+                        "label": "片源 2",
+                        "uri": source2
+                    }
+                },
+                {
+                    "type": "spacer",
+                    "size": "sm"
+                }
+            ],
+            "flex": 0
+        }
     });
-    await context.sendText(`番號：${vidId}`);
-    await context.sendText(`演員：${casts}`);
-    await context.sendText(`發行日：${releaseDate}`);
-    await context.sendText(`片源 1：https://jable.tv/videos/${vidId}/\n\n片源 2：https://www2.javhdporn.net/video/${vidId}/`);
-
     context.setState({ currentVidID: vidId });
 }
 
 async function disLike(context) {
-    const { displayName } = await context.getUserProfile();
+    const { userId } = await context.getUserProfile();
     const { text } = context.event;
     const data = context.state.collectors;
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
         .toUpperCase();
-        console.log(`vidId: ${vidId}`);
     if (data.length !== 0) {
-        const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
+        const index = data.findIndex(person => person.userId === userId && person.likes === vidId);
         if (index > -1) {
             data.splice(index, 1);
             context.setState({
@@ -129,20 +247,16 @@ async function disLike(context) {
 }
 
 async function like(context) {
-    const vidId = context.state.currentVidID;
-    const { displayName } = await context.getUserProfile();
-    try {
-        await getSpecificMetaDataById(vidId);
-    } catch (error) {
-        return sendHelp(``, context);
-    }
     if (context.state.currentVidID !== '') {
+        const vidId = context.state.currentVidID;
+        const { userId } = await context.getUserProfile();
         context.setState({
             currentVidID: vidId,
             collectors: [
                 ...context.state.collectors,
                 {
-                    name: displayName,
+                    date: new Date().toISOString().split('T')[0],
+                    userId: userId,
                     likes: vidId.trim(),
                 }
             ],
@@ -157,35 +271,117 @@ async function like(context) {
 
 async function likeSpecific(context) {
     const { text } = context.event;
-    const { displayName } = await context.getUserProfile();
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
-        .toUpperCase();
+    .toUpperCase();
     try {
         await getSpecificMetaDataById(vidId);
-
+        const { userId } = await context.getUserProfile();
         context.setState({
             collectors: [
                 ...context.state.collectors,
                 {
-                    name: displayName,
+                    date: new Date().toISOString().split('T')[0],
+                    userId: userId,
                     likes: vidId.trim(),
                 }
             ]
         });
         await context.sendText(`你收藏了「${vidId}」`);
+        await myLikes(context);
     } catch (error) {
         return sendHelp(error, context);
     }
 }
 
 async function myLikes(context) {
-    const { displayName } = await context.getUserProfile();
+    const { userId } = await context.getUserProfile();
     const data = context.state.collectors;
-    const likesArr = _.map(_.mapValues(_.groupBy(data, 'name'), o => o.map(like => _.omit(like, 'name')))[`${displayName}`], 'likes');
     if (data.length === 0) {
         return sendHelp(`您目前沒有收藏任何片子喔，可在抽完片子後輸入「收藏」來收藏該片，或直接輸入「收藏SSIS-129」收藏特定番號。`, context);
     } else {
-        await context.sendText(likesArr.join('\n'));
+        const flexContent = [];
+        _.forEach(_.groupBy(data, 'userId')[userId], (value) => {
+            flexContent.unshift(
+                {
+                    "type": "box",
+                    "layout": "baseline",
+                    "margin": "md",
+                    "contents": [
+                        {
+                            "type": "text",
+                            "text": value.date,
+                            "size": "sm",
+                            "color": "#999999",
+                            "margin": "none",
+                            "flex": 5,
+                            "align": "center",
+                            "decoration": "none"
+                        },
+                        {
+                            "type": "text",
+                            "text": value.likes,
+                            "size": "sm",
+                            "color": "#999999",
+                            "margin": "none",
+                            "flex": 5,
+                            "align": "center",
+                            "offsetStart": "md",
+                            "decoration": "none"
+                        }
+                    ],
+                    "action": {
+                        "type": "message",
+                        "label": "action",
+                        "text": value.likes
+                    }
+                }
+            );
+        });
+        await context.sendFlex('我的收藏',{
+            "type": "bubble",
+            "size": "kilo",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "box",
+                        "layout": "baseline",
+                        "margin": "md",
+                        "contents": [
+                            {
+                                "type": "text",
+                                "text": "收藏日期",
+                                "size": "sm",
+                                "margin": "none",
+                                "flex": 5,
+                                "weight": "bold",
+                                "align": "center",
+                                "decoration": "none"
+                            },
+                            {
+                                "type": "text",
+                                "text": "收藏番號",
+                                "size": "sm",
+                                "margin": "none",
+                                "flex": 5,
+                                "align": "center",
+                                "offsetStart": "md",
+                                "weight": "bold",
+                                "decoration": "none"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "lg",
+                        "spacing": "sm",
+                        "contents": [...flexContent]
+                    }
+                ]
+            }
+        });
     }
 }
 

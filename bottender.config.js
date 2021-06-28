@@ -1,6 +1,6 @@
 module.exports = {
   session: {
-    driver: 'mongo',
+    driver: 'memory',
     stores: {
       memory: {
         maxSize: 500,
