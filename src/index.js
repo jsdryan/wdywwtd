@@ -5,6 +5,17 @@ const _ = require('lodash');
 const got = require('got');
 const httpsUrl = require('https-url');
 
+async function getLocalDate() {
+    if (!Date.prototype.toISODate) {
+        Date.prototype.toISODate = function() {
+          return this.getFullYear() + '-' +
+                 ('0'+ (this.getMonth()+1)).slice(-2) + '-' +
+                 ('0'+ this.getDate()).slice(-2);
+        }
+    }
+    return new Date().toISODate();
+}
+
 async function getCastsByElem(castElem) {
     let casts = '';
     if (castElem.length > 1) {
@@ -217,7 +228,7 @@ async function sendInfoByMetaData(metaData, context) {
                     "height": "sm",
                     "action": {
                         "type": "message",
-                        "label": "❤ 我喜歡",
+                        "label": "❤ 我喜歡，收藏！",
                         "text": "收藏"
                     }
                 },
@@ -232,6 +243,16 @@ async function sendInfoByMetaData(metaData, context) {
                     }
                 },
                 {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "message",
+                        "label": "😍 列出我的收藏！",
+                        "text": "我的收藏"
+                    }
+                },
+                {
                     "type": "spacer",
                     "size": "sm"
                 }
@@ -243,13 +264,13 @@ async function sendInfoByMetaData(metaData, context) {
 }
 
 async function disLike(context) {
-    const { userId } = await context.getUserProfile();
+    const { displayName } = await context.getUserProfile();
     const { text } = context.event;
     const data = context.state.collectors;
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
         .toUpperCase();
     if (data.length !== 0) {
-        const index = data.findIndex(person => person.userId === userId && person.likes === vidId);
+        const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
         if (index > -1) {
             data.splice(index, 1);
             context.setState({
@@ -269,14 +290,14 @@ async function disLike(context) {
 async function like(context) {
     if (context.state.currentVidID !== '') {
         const vidId = context.state.currentVidID;
-        const { userId } = await context.getUserProfile();
+        const { displayName } = await context.getUserProfile();
         context.setState({
             currentVidID: vidId,
             collectors: [
                 ...context.state.collectors,
                 {
-                    date: new Date().toISOString().split('T')[0],
-                    userId: userId,
+                    date: await getLocalDate(),
+                    name: displayName,
                     likes: vidId.trim(),
                 }
             ],
@@ -295,13 +316,13 @@ async function likeSpecific(context) {
     .toUpperCase();
     try {
         await getSpecificMetaDataById(vidId);
-        const { userId } = await context.getUserProfile();
+        const { displayName } = await context.getUserProfile();
         context.setState({
             collectors: [
                 ...context.state.collectors,
                 {
-                    date: new Date().toISOString().split('T')[0],
-                    userId: userId,
+                    date: await getLocalDate(),
+                    name: displayName,
                     likes: vidId.trim(),
                 }
             ]
@@ -314,22 +335,22 @@ async function likeSpecific(context) {
 }
 
 async function myLikes(context) {
-    const { userId } = await context.getUserProfile();
+    const { displayName } = await context.getUserProfile();
     const data = context.state.collectors;
     if (data.length === 0) {
         return sendHelp(`您目前沒有收藏任何片子喔。`, context);
     } else {
         const flexContent = [];
-        _.forEach(_.groupBy(data, 'userId')[userId], (value) => {
+        _.forEach(_.groupBy(data, 'name')[displayName], (value) => {
             flexContent.unshift(
                 {
                     "type": "box",
                     "layout": "baseline",
-                    "margin": "md",
+                    "margin": "xxl",
                     "contents": [
                         {
                             "type": "text",
-                            "text": value.date,
+                            "text": value.likes,
                             "size": "sm",
                             "color": "#999999",
                             "margin": "none",
@@ -339,25 +360,47 @@ async function myLikes(context) {
                         },
                         {
                             "type": "text",
-                            "text": value.likes,
+                            "text": "查看",
                             "size": "sm",
-                            "color": "#999999",
+                            "color": "#007bff",
                             "margin": "none",
                             "flex": 5,
                             "align": "center",
                             "offsetStart": "md",
-                            "decoration": "none"
+                            "decoration": "none",
+                            "action": {
+                                "type": "message",
+                                "label": "action",
+                                "text": value.likes
+                            }
+                        },
+                        
+                        {
+                            "type": "text",
+                            "size": "sm",
+                            "color": "#dc3545",
+                            "margin": "none",
+                            "flex": 5,
+                            "align": "center",
+                            "offsetStart": "md",
+                            "decoration": "none",
+                            "text": "移除",
+                            "action": {
+                                "type": "message",
+                                "label": "action",
+                                "text": `移除 ${value.likes}`
+                            }
                         }
                     ],
                     "action": {
                         "type": "message",
                         "label": "action",
-                        "text": value.likes
+                        "text": "et"
                     }
                 }
             );
         });
-        await context.sendFlex('我的收藏',{
+        await context.sendFlex('我的收藏', {
             "type": "bubble",
             "size": "kilo",
             "body": {
@@ -371,7 +414,7 @@ async function myLikes(context) {
                         "contents": [
                             {
                                 "type": "text",
-                                "text": "收藏日期",
+                                "text": "番號",
                                 "size": "md",
                                 "margin": "none",
                                 "flex": 5,
@@ -381,7 +424,18 @@ async function myLikes(context) {
                             },
                             {
                                 "type": "text",
-                                "text": "收藏番號",
+                                "text": "查看",
+                                "size": "md",
+                                "margin": "none",
+                                "flex": 5,
+                                "align": "center",
+                                "offsetStart": "md",
+                                "weight": "bold",
+                                "decoration": "none"
+                            },
+                            {
+                                "type": "text",
+                                "text": "移除",
                                 "size": "md",
                                 "margin": "none",
                                 "flex": 5,
