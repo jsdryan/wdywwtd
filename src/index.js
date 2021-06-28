@@ -222,6 +222,16 @@ async function sendInfoByMetaData(metaData, context) {
                     }
                 },
                 {
+                    "type": "button",
+                    "style": "link",
+                    "height": "sm",
+                    "action": {
+                        "type": "message",
+                        "label": "👎 不喜歡，再抽！",
+                        "text": "抽"
+                    }
+                },
+                {
                     "type": "spacer",
                     "size": "sm"
                 }
@@ -307,7 +317,7 @@ async function myLikes(context) {
     const { userId } = await context.getUserProfile();
     const data = context.state.collectors;
     if (data.length === 0) {
-        return sendHelp(`您目前沒有收藏任何片子喔，可在抽完片子後輸入「收藏」來收藏該片，或直接輸入「收藏SSIS-129」收藏特定番號。`, context);
+        return sendHelp(`您目前沒有收藏任何片子喔。`, context);
     } else {
         const flexContent = [];
         _.forEach(_.groupBy(data, 'userId')[userId], (value) => {
