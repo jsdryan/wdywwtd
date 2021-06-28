@@ -309,7 +309,7 @@ async function myLikes(context) {
                     "contents": [
                         {
                             "type": "text",
-                            "text": value.date,
+                            "text": value.date || new Date().toISOString().split('T')[0],
                             "size": "sm",
                             "color": "#999999",
                             "margin": "none",
