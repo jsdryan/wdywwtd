@@ -396,7 +396,6 @@ async function myLikes(context) {
 	if (index === -1) {
 		return sendHelp(`${displayName}，您目前沒有收藏任何片子喔。`, context);
 	} else {
-		context.setState({ myLikesMode: true });
 		const currentLikeVidID = context.state.currentLikeVidID;
 		const flexContent = [];
 		_.forEach(_.groupBy(data, 'name')[displayName], (value) => {
@@ -448,12 +447,7 @@ async function myLikes(context) {
 								"text": `移除 ${value.likes}`
 							}
 						}
-					],
-					"action": {
-						"type": "message",
-						"label": "action",
-						"text": "et"
-					}
+					]
 				}
 			);
 		});
@@ -601,18 +595,13 @@ async function getPreviewURLById(vidId) {
 async function sendRandomVid(context) {
 	const metaData = await getRandomMetaData();
 	await sendInfoByMetaData(metaData, context);
-	context.setState({ myLikesMode: false });
 }
 
 async function sendSpecificVid(context) {
 	try {
 		const vidId = parameterize(context.event.text).toUpperCase();
 		const metaData = await getSpecificMetaDataById(vidId);
-		const myLikesMode = context.state.myLikesMode;
 		await sendInfoByMetaData(metaData, context);
-		if (myLikesMode) {
-			await myLikes(context);
-		}
 	} catch (error) {
 		return sendHelp(error, context);
 	}
@@ -699,12 +688,7 @@ async function castInfo(context) {
 						"text": vidId
 					}
 				}
-			],
-			"action": {
-				"type": "message",
-				"label": "action",
-				"text": "et"
-			}
+			]
 		}
 		castVidsContent.push(obj);
 	}
