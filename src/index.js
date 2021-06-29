@@ -223,6 +223,10 @@ async function sendInfoByMetaData(metaData, context) {
                     }
                 },
                 {
+                    "type": "separator",
+                    "margin": "md"
+                },
+                {
                     "type": "button",
                     "style": "link",
                     "height": "sm",
@@ -277,34 +281,40 @@ async function disLike(context) {
                 currentVidID: vidId,
                 collectors: data
             });
-            await context.sendText(`你移除了「${vidId}」`);
+            await context.sendText(`您移除了「${vidId}」`);
             await myLikes(context);
         } else {
-            return sendHelp(`您目前沒有收藏「${vidId}」喔。`, context);
+            return sendHelp(`您不是${displayName}本人，無法移除唷！`, context);
         }
     } else {
-        return sendHelp(`您目前沒有收藏任何片子，沒有東西可讓您移除喔。`, context);
+        return sendHelp(`${displayName}，您目前沒有收藏任何片子，沒有東西可讓您移除喔。`, context);
     }
 }
 
 async function like(context) {
     if (context.state.currentVidID !== '') {
-        const vidId = context.state.currentVidID;
         const { displayName } = await context.getUserProfile();
-        context.setState({
-            currentVidID: vidId,
-            collectors: [
-                ...context.state.collectors,
-                {
-                    date: await getLocalDate(),
-                    name: displayName,
-                    likes: vidId.trim(),
-                }
-            ],
-        });
-        await context.sendText(`你收藏了「${vidId}」`);
-        await myLikes(context);
-        console.log(context.state);
+        const vidId = context.state.currentVidID;
+        const data = context.state.collectors;
+        const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
+        // 已收藏
+        if (index > -1) {
+            return sendHelp(`您已收藏過「${vidId}」囉！`, context);
+        } else {
+            context.setState({
+                currentVidID: vidId,
+                collectors: [
+                    ...context.state.collectors,
+                    {
+                        date: await getLocalDate(),
+                        name: displayName,
+                        likes: vidId.trim(),
+                    }
+                ],
+            });
+            await context.sendText(`您收藏了「${vidId}」`);
+            await myLikes(context);
+        }
     } else {
         return sendHelp('請輸入「抽」或特定番號（例如：SSNI-001）。', context);
     }
@@ -313,33 +323,41 @@ async function like(context) {
 async function likeSpecific(context) {
     const { text } = context.event;
     const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
-    .toUpperCase();
-    try {
-        await getSpecificMetaDataById(vidId);
-        const { displayName } = await context.getUserProfile();
-        context.setState({
-            collectors: [
-                ...context.state.collectors,
-                {
-                    date: await getLocalDate(),
-                    name: displayName,
-                    likes: vidId.trim(),
-                }
-            ]
-        });
-        await context.sendText(`你收藏了「${vidId}」`);
+            .toUpperCase();
+    const { displayName } = await context.getUserProfile();
+    // 如果頻道目前所抽的番號與準備要收藏的相同，不須驗證番號是否存在即可收藏。
+    if (context.state.currentVidID !== vidId) {
+        try {
+            await getSpecificMetaDataById(vidId);
+            context.setState({
+                collectors: [
+                    ...context.state.collectors,
+                    {
+                        date: await getLocalDate(),
+                        name: displayName,
+                        likes: vidId.trim(),
+                    }
+                ]
+            });
+            await context.sendText(`您收藏了「${vidId}」`);
+            await myLikes(context);
+        } catch (error) {
+            return sendHelp(error, context);
+        }
+    } else {
+        await context.sendText(`您收藏了「${vidId}」`);
         await myLikes(context);
-    } catch (error) {
-        return sendHelp(error, context);
     }
 }
 
 async function myLikes(context) {
     const { displayName } = await context.getUserProfile();
     const data = context.state.collectors;
-    if (data.length === 0) {
-        return sendHelp(`您目前沒有收藏任何片子喔。`, context);
+    const index = data.findIndex(person => person.name === displayName);
+    if (index === -1) {
+        return sendHelp(`${displayName}，您目前沒有收藏任何片子喔。`, context);
     } else {
+        context.setState({ myLikesMode: true });
         const flexContent = [];
         _.forEach(_.groupBy(data, 'name')[displayName], (value) => {
             flexContent.unshift(
@@ -374,7 +392,6 @@ async function myLikes(context) {
                                 "text": value.likes
                             }
                         },
-                        
                         {
                             "type": "text",
                             "size": "sm",
@@ -407,6 +424,17 @@ async function myLikes(context) {
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
+                    {
+                        "type": "text",
+                        "text": `${displayName}的收藏清單`,
+                        "align": "center",
+                        "size": "lg",
+                        "weight": "bold"
+                    },
+                    {
+                        "type": "separator",
+                        "margin": "md"
+                    },
                     {
                         "type": "box",
                         "layout": "baseline",
@@ -512,13 +540,18 @@ async function getPreviewURLById(vidId) {
 async function sendRandomVid(context) {
     const metaData = await getRandomMetaData();
     await sendInfoByMetaData(metaData, context);
+    context.setState({ myLikesMode: false });
 }
 
 async function sendSpecificVid(context) {
     try {
         const vidId = parameterize(context.event.text).toUpperCase();
         const metaData = await getSpecificMetaDataById(vidId);
+        const myLikesMode = context.state.myLikesMode;
         await sendInfoByMetaData(metaData, context);
+        if (myLikesMode) {
+            await myLikes(context);
+        }
     } catch (error) {
         return sendHelp(error, context);
     }
