@@ -125,7 +125,7 @@ async function sendInfoByMetaData(metaData, context) {
 					{
 						"type": "text",
 						"text": castArray[i],
-						"color": "#666666",
+						"color": "#007bff",
 						"size": "md",
 						"flex": 5,
 						"align": "center",
@@ -468,7 +468,7 @@ async function myLikes(context) {
 					{
 						"type": "box",
 						"layout": "baseline",
-						"margin": "md",
+						"margin": "xxl",
 						"contents": [
 							{
 								"type": "text",
