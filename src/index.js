@@ -409,22 +409,11 @@ async function myLikes(context) {
 							"type": "text",
 							"text": value.likes,
 							"size": "sm",
-							"color": "#999999",
-							"margin": "none",
-							"flex": 5,
-							"align": "center",
-							"decoration": currentLikeVidID === value.likes ? "underline" : "none"
-						},
-						{
-							"type": "text",
-							"text": "查看",
-							"size": "sm",
 							"color": "#007bff",
 							"margin": "none",
 							"flex": 5,
 							"align": "center",
-							"offsetStart": "md",
-							"decoration": "none",
+							"decoration": currentLikeVidID === value.likes ? "underline" : "none",
 							"action": {
 								"type": "message",
 								"label": "action",
@@ -433,6 +422,7 @@ async function myLikes(context) {
 						},
 						{
 							"type": "text",
+							"text": "移除",
 							"size": "sm",
 							"color": "#dc3545",
 							"margin": "none",
@@ -440,7 +430,6 @@ async function myLikes(context) {
 							"align": "center",
 							"offsetStart": "md",
 							"decoration": "none",
-							"text": "移除",
 							"action": {
 								"type": "message",
 								"label": "action",
@@ -451,7 +440,7 @@ async function myLikes(context) {
 				}
 			);
 		});
-		await context.sendFlex('我的收藏', {
+		await context.sendFlex(`${displayName}的收藏清單`, {
 			"type": "bubble",
 			"size": "kilo",
 			"body": {
@@ -480,17 +469,17 @@ async function myLikes(context) {
 								"align": "center",
 								"decoration": "none"
 							},
-							{
-								"type": "text",
-								"text": "查看",
-								"size": "md",
-								"margin": "none",
-								"flex": 5,
-								"align": "center",
-								"offsetStart": "md",
-								"weight": "bold",
-								"decoration": "none"
-							},
+							// {
+							// 	"type": "text",
+							// 	"text": "查看",
+							// 	"size": "md",
+							// 	"margin": "none",
+							// 	"flex": 5,
+							// 	"align": "center",
+							// 	"offsetStart": "md",
+							// 	"weight": "bold",
+							// 	"decoration": "none"
+							// },
 							{
 								"type": "text",
 								"text": "移除",
@@ -608,16 +597,46 @@ async function sendSpecificVid(context) {
 }
 
 async function test(context) {
-	try {
-		got(`https://www.javlibrary.com/tw/vl_searchbyid.php?keyword=iii-555`);
-	} catch(err) {
-		console.log(err);
+	async function getCastInfoMetaDataByName(cast) {
+		const response = await got(`http://localhost:4567/casts_info?cast=${cast}`);
+		const castMetaData = JSON.parse(response.body);
+		const profilePicURL = castMetaData.cast_info_page_url;
+		const birthDate = castMetaData.birth_date;
+		const height = castMetaData.height;
+		const bust = `${castMetaData.bust} 公分`;
+		const cup = castMetaData.cup;
+		const waist = `${castMetaData.waist} 公分`;
+		const hips = `${castMetaData.hip} 公分`;
+
+		return {
+			profilePicURL, birthDate, height, bust, cup, waist, hips
+		}
 	}
+
+	console.log(await getCastInfoMetaDataByName('篠田ゆう'));;
 }
 
 async function castInfo(context) {
+	async function getCastInfoMetaDataByName(cast) {
+		const response = await got(`http://localhost:4567/casts_info?cast=${cast}`);
+		const castMetaData = JSON.parse(response.body);
+		const profilePicURL = castMetaData.img_url;
+		const birthDate = castMetaData.birth_date;
+		const height = `${castMetaData.height} 公分`;
+		const bust = `${castMetaData.bust} 公分`;
+		const cup = castMetaData.cup;
+		const waist = `${castMetaData.waist} 公分`;
+		const hips = `${castMetaData.hip} 公分`;
+
+		return {
+			profilePicURL, birthDate, height, bust, cup, waist, hips
+		}
+	}
+
 	const javlibraryTwURL = 'https://www.javlibrary.com/tw';
 	const castName = context.event.text.split('「')[1].split('」')[0];
+	const castInfoMetaData = await getCastInfoMetaDataByName(castName);
+	console.log(castInfoMetaData);
 	let response = await got(`https://www.javbus.com/search/${castName}&type=&parent=ce`);
 	let $ = cheerio.load(response.body);
 	const castRandomVidId = $('.item-tag+ date')[0]
@@ -695,13 +714,13 @@ async function castInfo(context) {
 	await context.sendFlex(`「${castName}」的作品`, {
 		"type": "bubble",
 		"size": "kilo",
-		"body": {
+		"header": {
 			"type": "box",
 			"layout": "vertical",
 			"contents": [
 				{
 					"type": "text",
-					"text": `「${castName}」的作品`,
+					"text": castName,
 					"align": "center",
 					"size": "lg",
 					"weight": "bold",
@@ -709,58 +728,281 @@ async function castInfo(context) {
 					"style": "normal",
 					"offsetTop": "none",
 					"offsetBottom": "none"
-				},
-				{
-					"type": "text",
-					"text": "（依日期，最多顯示 10 件）",
-					"align": "center",
-					"size": "sm",
-					"margin": "none",
-					"style": "normal",
-					"offsetTop": "none",
-					"offsetBottom": "none",
-					"color": "#666666"
-				},
+				}
+			]
+		},
+		"hero": {
+			"type": "image",
+			"size": "full",
+			"url": castInfoMetaData.profilePicURL
+		},
+		"body": {
+			"type": "box",
+			"layout": "vertical",
+			"contents": [
 				{
 					"type": "box",
-					"layout": "baseline",
-					"margin": "xxl",
+					"layout": "vertical",
 					"contents": [
 						{
 							"type": "text",
-							"text": "發售日",
-							"size": "md",
-							"margin": "none",
-							"flex": 5,
-							"weight": "bold",
+							"text": "基本資料",
 							"align": "center",
-							"decoration": "none"
+							"size": "lg",
+							"weight": "bold",
+							"margin": "xxl",
+							"style": "normal",
+							"offsetTop": "none",
+							"offsetBottom": "none"
 						},
 						{
-							"type": "text",
-							"text": "番號",
-							"size": "md",
+							"type": "box",
+							"layout": "vertical",
+							"contents": [
+								{
+									"type": "box",
+									"layout": "baseline",
+									"margin": "lg",
+									"contents": [
+										{
+											"type": "text",
+											"text": "生日",
+											"size": "sm",
+											"color": "#999999",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"decoration": "none"
+										},
+										{
+											"type": "text",
+											"text": castInfoMetaData.birthDate,
+											"size": "xs",
+											"color": "#AAAAAA",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"offsetStart": "md",
+											"decoration": "none"
+										}
+									]
+								},
+								{
+									"type": "box",
+									"layout": "baseline",
+									"margin": "lg",
+									"contents": [
+										{
+											"type": "text",
+											"text": "身高",
+											"size": "sm",
+											"color": "#999999",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"decoration": "none"
+										},
+										{
+											"type": "text",
+											"text": `${castInfoMetaData.height}`,
+											"size": "sm",
+											"color": "#AAAAAA",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"offsetStart": "md",
+											"decoration": "none"
+										}
+									]
+								},
+								{
+									"type": "box",
+									"layout": "baseline",
+									"margin": "lg",
+									"contents": [
+										{
+											"type": "text",
+											"text": "胸圍",
+											"size": "sm",
+											"color": "#999999",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"decoration": "none"
+										},
+										{
+											"type": "text",
+											"text": `${castInfoMetaData.bust}`,
+											"size": "sm",
+											"color": "#AAAAAA",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"offsetStart": "md",
+											"decoration": "none"
+										}
+									]
+								},
+								{
+									"type": "box",
+									"layout": "baseline",
+									"margin": "lg",
+									"contents": [
+										{
+											"type": "text",
+											"text": "罩杯",
+											"size": "sm",
+											"color": "#999999",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"decoration": "none"
+										},
+										{
+											"type": "text",
+											"text": `${castInfoMetaData.cup}`,
+											"size": "sm",
+											"color": "#AAAAAA",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"offsetStart": "md",
+											"decoration": "none"
+										}
+									]
+								},
+								{
+									"type": "box",
+									"layout": "baseline",
+									"margin": "lg",
+									"contents": [
+										{
+											"type": "text",
+											"text": "腰圍",
+											"size": "sm",
+											"color": "#999999",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"decoration": "none"
+										},
+										{
+											"type": "text",
+											"text": `${castInfoMetaData.waist}`,
+											"size": "sm",
+											"color": "#AAAAAA",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"offsetStart": "md",
+											"decoration": "none"
+										}
+									]
+								},
+								{
+									"type": "box",
+									"layout": "baseline",
+									"margin": "lg",
+									"contents": [
+										{
+											"type": "text",
+											"text": "臀圍",
+											"size": "sm",
+											"color": "#999999",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"decoration": "none"
+										},
+										{
+											"type": "text",
+											"text": `${castInfoMetaData.hips}`,
+											"size": "sm",
+											"color": "#AAAAAA",
+											"margin": "none",
+											"flex": 5,
+											"align": "center",
+											"offsetStart": "md",
+											"decoration": "none"
+										}
+									]
+								}
+							],
 							"margin": "none",
-							"flex": 5,
-							"align": "center",
-							"offsetStart": "md",
-							"weight": "bold",
-							"decoration": "none"
+							"offsetEnd": "none",
+							"offsetBottom": "none"
 						}
 					],
-					"offsetBottom": "none",
-					"offsetTop": "none"
-				},
-				{
-					"type": "separator",
-					"margin": "none"
+					"offsetBottom": "xxl"
 				},
 				{
 					"type": "box",
 					"layout": "vertical",
-					"margin": "none",
-					"spacing": "md",
-					"contents": [...castVidsContent]
+					"contents": [
+						{
+							"type": "text",
+							"text": "作品集",
+							"align": "center",
+							"size": "lg",
+							"weight": "bold",
+							"margin": "xxl",
+							"style": "normal",
+							"offsetTop": "none",
+							"offsetBottom": "none"
+						},
+						{
+							"type": "text",
+							"text": "（依日期，最多顯示 10 件）",
+							"align": "center",
+							"size": "sm",
+							"margin": "none",
+							"style": "normal",
+							"offsetTop": "none",
+							"offsetBottom": "none",
+							"color": "#666666"
+						},
+						{
+							"type": "box",
+							"layout": "baseline",
+							"margin": "xxl",
+							"contents": [
+								{
+									"type": "text",
+									"text": "發售日",
+									"size": "md",
+									"margin": "none",
+									"flex": 5,
+									"weight": "bold",
+									"align": "center",
+									"decoration": "none"
+								},
+								{
+									"type": "text",
+									"text": "番號",
+									"size": "md",
+									"margin": "none",
+									"flex": 5,
+									"align": "center",
+									"offsetStart": "md",
+									"weight": "bold",
+									"decoration": "none"
+								}
+							],
+							"offsetBottom": "none",
+							"offsetTop": "none"
+						},
+						{
+							"type": "separator",
+							"margin": "none"
+						},
+						{
+							"type": "box",
+							"layout": "vertical",
+							"margin": "none",
+							"spacing": "md",
+							"contents": [...castVidsContent]
+						}
+					]
 				}
 			]
 		}

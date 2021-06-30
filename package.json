@@ -19,6 +19,8 @@
     "got": "^11.8.2",
     "https-url": "^1.0.0",
     "jest": "27.0.3",
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "lodash": "^4.17.21",
     "parameterize": "^1.0.0",
     "prettier": "2.3.0",
