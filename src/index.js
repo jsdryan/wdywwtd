@@ -628,86 +628,9 @@ async function castInfo(context) {
 		}
 	}
 
-	const javlibraryTwURL = 'https://www.javlibrary.com/tw';
 	const castName = context.event.text.split('「')[1].split('」')[0];
 	const castInfoMetaData = await getCastInfoMetaDataByName(castName);
-	console.log(castInfoMetaData);
-	let response = await got(`https://www.javbus.com/search/${castName}&type=&parent=ce`);
-	let $ = cheerio.load(response.body);
-	const castRandomVidId = $('.item-tag+ date')[0]
-			.children.find(child => child.type == 'text')
-			.data;
-	response = await got(`${javlibraryTwURL}/vl_searchbyid.php`, {
-		searchParams: { keyword: castRandomVidId },
-		headers: { 'Cookie': 'over18=18', 'user-agent': 'Android' }
-	});
-
-	$ = cheerio.load(response.body);
-	if ($('em').text() === '搜尋沒有結果。') {
-		throw `沒有「${castRandomVidId}」這部片子。`;
-	}
-	const vidItems = $('.video > a');
-
-	if (vidItems.length > 1) {
-		for (let el of vidItems) {
-			const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
-			if (code === castRandomVidId) {
-				console.log(`「${castRandomVidId}」有${vidItems.length}筆資料，選定 ${javlibraryTwURL}${el.attribs.href.split('./')[1]} 頁面進行解析中…`)
-				response = await got(`${javlibraryTwURL}${el.attribs.href.split('./')[1]}`, {
-					headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
-				});
-				$ = cheerio.load(response.body);
-				break;
-			}
-		}
-	}
-
-	const castVidsUrl = `${javlibraryTwURL}/${$('#video_cast a').attr('href')}&list&mode=&page=1`;
-	response = await got(castVidsUrl);
-	console.log(castVidsUrl);
-	$ = cheerio.load(response.body);
-
-	const castVidsQTY = _.min([$('.video > a').length, 10]);
-	const castVidsContent = [];
-	for (var i = 0; i < castVidsQTY; i++) {
-		const releaseDate = $($('.video')[i]).parent().siblings()[0].children.find(child => child.type == 'text').data;
-		const vidId = $('.video > a')[i].attribs.title.match(/^[A-Za-z]+[\s\-]?\d+/)[0];
-		const obj = {
-			"type": "box",
-			"layout": "baseline",
-			"margin": "xxl",
-			"contents": [
-				{
-					"type": "text",
-					"text": releaseDate,
-					"size": "sm",
-					"color": "#999999",
-					"margin": "none",
-					"flex": 5,
-					"align": "center",
-					"decoration": "none"
-				},
-				{
-					"type": "text",
-					"text": vidId,
-					"size": "sm",
-					"color": "#007bff",
-					"margin": "none",
-					"flex": 5,
-					"align": "center",
-					"offsetStart": "md",
-					"decoration": "none",
-					"action": {
-						"type": "message",
-						"label": "action",
-						"text": vidId
-					}
-				}
-			]
-		}
-		castVidsContent.push(obj);
-	}
-	await context.sendFlex(`「${castName}」的作品`, {
+	await context.sendFlex(`「${castName}」資訊`, {
 		"type": "bubble",
 		"size": "kilo",
 		"header": {
@@ -930,32 +853,141 @@ async function castInfo(context) {
 						}
 					],
 					"offsetBottom": "xxl"
+				}
+			]
+		},
+		"footer": {
+			"type": "box",
+			"layout": "vertical",
+			"spacing": "sm",
+			"contents": [
+				{
+					"type": "separator",
+					"margin": "md"
 				},
+				{
+					"type": "button",
+					"style": "link",
+					"height": "sm",
+					"action": {
+						"type": "message",
+						"label": "列出前 10 高評價作品",
+						"text": `前 10 高評價作品「${castName}」`
+					}
+				},
+				{
+					"type": "spacer",
+					"size": "sm"
+				}
+			],
+			"flex": 0
+		}
+	});
+}
+
+const sendTrailer = async context => {
+	const vidId = context.event.text.split('「')[1].split('」')[0];
+	const vidTrailerSrc = await getPreviewURLById(vidId);
+	await context.sendVideo({
+		originalContentUrl: vidTrailerSrc,
+		previewImageUrl: vidTrailerSrc
+	});
+}
+
+const top10Vids = async context => {
+	const getDvdMetaDataByFanzaCode = async fanzaCode => {
+		const response = await got(`https://www.libredmm.com/search?q=${fanzaCode}`);
+		const $ = cheerio.load(response.body);
+		return {
+			releaseDate: $('body > main > div > div.col-md-4 > dl > dd:nth-child(4)')[0].children.find(child => child.type == 'text').data,
+			vidId: $('body > main > h1 > span:nth-child(1)')[0].children.find(child => child.type == 'text').data
+		}
+	}
+
+	const getFanzaCastIdByCastName = async castName => {
+		const response = await got(`https://www.libredmm.com/actresses?fuzzy=${castName}`);
+		const $ = cheerio.load(response.body);
+		return $('.card-title > a')[0].attribs.href.split('/')[2];
+	}
+
+	const get10VidsIdByCastName = async castName => {
+		const fanzaCastId = await getFanzaCastIdByCastName(castName);
+		const response = await got(`https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/id=${fanzaCastId}/sort=review_rank/`, {
+			headers: { 'User-Agent': 'Android', 'Cookie': 'age_check_done=1' }
+		});
+		const $ = cheerio.load(response.body);
+		const castTopVidsItems = $('.flb-works > a').slice(0, 10);
+		const arr = [];
+		await Promise.all(castTopVidsItems.map(async (_, castItem) => {
+			const fanzaCode = castItem.attribs.href.split('cid=')[1].split('/')[0];
+			const dvdMetaData = await getDvdMetaDataByFanzaCode(fanzaCode);
+			arr.push(dvdMetaData);
+		}));
+		return _.reverse(_.sortBy(arr, ['user', 'releaseDate']));
+	}
+
+	const castName = context.event.text.split('「')[1].split('」')[0];
+	const topRated10 = await get10VidsIdByCastName(castName);
+	const topRated10FlexContent = [];
+	for (const vid of topRated10) {
+		const obj = {
+			"type": "box",
+			"layout": "baseline",
+			"margin": "xxl",
+			"contents": [
+				{
+					"type": "text",
+					"text": vid.releaseDate,
+					"size": "sm",
+					"color": "#999999",
+					"margin": "none",
+					"flex": 5,
+					"align": "center",
+					"decoration": "none"
+				},
+				{
+					"type": "text",
+					"text": vid.vidId,
+					"size": "sm",
+					"color": "#007bff",
+					"margin": "none",
+					"flex": 5,
+					"align": "center",
+					"offsetStart": "md",
+					"decoration": "none",
+					"action": {
+						"type": "message",
+						"label": "action",
+						"text": vid.vidId
+					}
+				}
+			]
+		}
+		topRated10FlexContent.push(obj);
+	}
+	
+	await context.sendFlex(`「${castName}」的高評價作品`, {
+		"type": "bubble",
+		"size": "kilo",
+		"body": {
+			"type": "box",
+			"layout": "vertical",
+			"contents": [
 				{
 					"type": "box",
 					"layout": "vertical",
 					"contents": [
 						{
 							"type": "text",
-							"text": "作品集",
+							"text": `「${castName}」作品`,
 							"align": "center",
 							"size": "lg",
+							"wrap": true,
 							"weight": "bold",
 							"margin": "xxl",
 							"style": "normal",
 							"offsetTop": "none",
-							"offsetBottom": "none"
-						},
-						{
-							"type": "text",
-							"text": "（依日期，最多顯示 10 件）",
-							"align": "center",
-							"size": "sm",
-							"margin": "none",
-							"style": "normal",
-							"offsetTop": "none",
-							"offsetBottom": "none",
-							"color": "#666666"
+							"offsetBottom": "xxl"
 						},
 						{
 							"type": "box",
@@ -996,26 +1028,13 @@ async function castInfo(context) {
 							"layout": "vertical",
 							"margin": "none",
 							"spacing": "md",
-							"contents": [...castVidsContent]
+							"contents": [...topRated10FlexContent]
 						}
 					]
 				}
 			]
 		}
 	});
-}
-
-const sendTrailer = async context => {
-	const vidId = context.event.text.split('「')[1].split('」')[0];
-	const vidTrailerSrc = await getPreviewURLById(vidId);
-	await context.sendVideo(vidTrailerSrc);
-}
-
-const top10Vids = async context => {
-	const castName = context.event.text.split('「')[1].split('」')[0];
-	const response = await got(`https://www.libredmm.com/actresses?fuzzy=${castName}`)
-	
-	// card-title
 }
 
 module.exports = async function App() {
