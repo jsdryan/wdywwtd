@@ -47,7 +47,11 @@ async function getSpecificMetaDataById(vidId) {
 		for (let el of vidItems) {
 			const code = el.attribs.title.match(/^[A-Z]+\-\d+/g)[0];
 			if (code === vidId) {
-				console.log(`「${vidId}」有${vidItems.length}筆資料，選定 ${javlibraryTwURL}${el.attribs.href.split('./')[1]} 頁面進行解析中…`)
+				console.log(
+					`「${vidId}」有${vidItems.length}筆資料，選定 ${javlibraryTwURL}${
+						el.attribs.href.split("./")[1]
+					} 頁面進行解析中…`
+				);
 				response = await got(`${javlibraryTwURL}${el.attribs.href.split('./')[1]}`, {
 					headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
 				});
@@ -74,7 +78,7 @@ async function getRandomMetaData() {
 	const randomPageNum = _.random(1, 25);
 
 	// Get randomized video page.
-	response = await got(`${javlibraryTwURL}/vl_mostwanted.php`, {
+	response = await got(`${javlibraryTwURL}/vl_bestrated.php`, {
 		searchParams: { mode: 1, page: randomPageNum },
 		headers: { 'Cookie': 'over18=18', 'user-agent': 'Android' }
 	});
@@ -214,9 +218,9 @@ async function sendInfoByMetaData(metaData, context) {
 					"style": "link",
 					"height": "sm",
 					"action": {
-						"type": "uri",
+						"type": "message",
 						"label": "預告片",
-						"uri": trailerURL
+						"text": `預告片「${vidId}」`
 					}
 				},
 				{
@@ -316,6 +320,7 @@ async function like(context) {
 		context.setState( { currentLikeVidID: vidId } );
 		const data = context.state.collectors;
 		const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
+		
 		// 已收藏
 		if (index > -1) {
 			await context.sendText(`您已收藏過「${vidId}」囉！`);
@@ -596,29 +601,19 @@ async function sendSpecificVid(context) {
 	}
 }
 
-async function test(context) {
-	async function getCastInfoMetaDataByName(cast) {
-		const response = await got(`http://localhost:4567/casts_info?cast=${cast}`);
-		const castMetaData = JSON.parse(response.body);
-		const profilePicURL = castMetaData.cast_info_page_url;
-		const birthDate = castMetaData.birth_date;
-		const height = castMetaData.height;
-		const bust = `${castMetaData.bust} 公分`;
-		const cup = castMetaData.cup;
-		const waist = `${castMetaData.waist} 公分`;
-		const hips = `${castMetaData.hip} 公分`;
+const test = async (context) => {
+  const videoId = "SSIS-001";
+  const response = await got(
+    `https://dmm-api-for-wdywwyd.herokuapp.com/trailers?vid_id=${videoId}`
+  );
+  const buffer = JSON.parse(response.body);
+  await context.sendText(buffer.tailer_url);
+};
 
-		return {
-			profilePicURL, birthDate, height, bust, cup, waist, hips
-		}
-	}
-
-	console.log(await getCastInfoMetaDataByName('篠田ゆう'));;
-}
 
 async function castInfo(context) {
 	async function getCastInfoMetaDataByName(cast) {
-		const response = await got(`http://localhost:4567/casts_info?cast=${cast}`);
+		const response = await got(`https://dmm-api-for-wdywwyd.herokuapp.com/casts_info?cast=${cast}`);
 		const castMetaData = JSON.parse(response.body);
 		const profilePicURL = castMetaData.img_url;
 		const birthDate = castMetaData.birth_date;
@@ -669,6 +664,7 @@ async function castInfo(context) {
 
 	const castVidsUrl = `${javlibraryTwURL}/${$('#video_cast a').attr('href')}&list&mode=&page=1`;
 	response = await got(castVidsUrl);
+	console.log(castVidsUrl);
 	$ = cheerio.load(response.body);
 
 	const castVidsQTY = _.min([$('.video > a').length, 10]);
@@ -1009,15 +1005,30 @@ async function castInfo(context) {
 	});
 }
 
+const sendTrailer = async context => {
+	const vidId = context.event.text.split('「')[1].split('」')[0];
+	const vidTrailerSrc = await getPreviewURLById(vidId);
+	await context.sendVideo(vidTrailerSrc);
+}
+
+const top10Vids = async context => {
+	const castName = context.event.text.split('「')[1].split('」')[0];
+	const response = await got(`https://www.libredmm.com/actresses?fuzzy=${castName}`)
+	
+	// card-title
+}
+
 module.exports = async function App() {
 	return router([
 		text(/^抽{1}$/, sendRandomVid),
 		text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVid),
 		text(/^收藏$/, like),
-		text(/^測試$/, test),
+		text(/^test$/, test),
 		text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, likeSpecific),
 		text(/^移除\s?[A-Za-z]+[\s\-]?\d+$/, disLike),
-		text(/^演員資訊\s?「.+」$/, castInfo),
+		text(/^演員資訊「.+」$/, castInfo),
+		text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
+		text(/^前 10 高評價作品「.+」$/, top10Vids),
 		text(/^我的收藏$/, myLikes),
 		// route('*', sendHelp),
 	]);
