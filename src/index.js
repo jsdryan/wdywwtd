@@ -100,10 +100,15 @@ async function getRandomMetaData() {
 }
 
 async function sendInfoByMetaData(metaData, context) {
+
+	const getLFCastNameByVidId = async vidId => {
+		const response = await got(`https://dmm-api-for-wdywwyd.herokuapp.com/lf_cast_name?vid_id=${vidId}`);
+		return JSON.parse(response.body).lf_cast_name;
+	}
+
 	const vidId = metaData.vidId;
-	const trailerURL = await getPreviewURLById(vidId);
 	const coverURL = metaData.cover;
-	const casts = metaData.casts;
+	const casts = await getLFCastNameByVidId(vidId);
 	const releaseDate = metaData.releaseDate;
 	const source1 = `https://jable.tv/videos/${vidId}/`;
 	const source2 = `https://www2.javhdporn.net/video/${vidId}/`;
