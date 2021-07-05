@@ -901,10 +901,10 @@ const top10Vids = async context => {
 	
 	const getFanzaCastIdByCastName = async (castName) => {
 		const response = await got(
-			`https://www.libredmm.com/actresses?fuzzy=${castName}`
+			`https://dmm-api-for-wdywwyd.herokuapp.com/casts_info?cast=${castName}`
 		);
-		const $ = cheerio.load(response.body);
-		return $(".card-title > a")[0].attribs.href.split("/")[2];
+		const metaData = JSON.parse(response.body);
+		return metaData.fanza_cast_code
 	};	
 
 	const get10VidsIdByCastName = async (castName) => {
