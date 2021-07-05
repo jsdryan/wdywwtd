@@ -52,9 +52,9 @@ async function getSpecificMetaDataById(vidId) {
 						el.attribs.href.split("./")[1]
 					} 頁面進行解析中…`
 				);
-				response = await got(`${javlibraryTwURL}${el.attribs.href.split('./')[1]}`, {
-					headers: { 'user-agent': 'Android', 'cookie': 'over18=18' }
-				});
+				response = await got(`${javlibraryTwURL}${el.attribs.href.split("./")[1]}`, {
+					headers: { "user-agent": "Android", cookie: "over18=18" },
+				});				
 				$ = cheerio.load(response.body);
 				break;
 			}
@@ -296,7 +296,9 @@ async function disLike(context) {
 	const vidId = parameterize(text.match(/[A-Za-z]+[\s\-]?\d+/)[0])
 		.toUpperCase();
 	if (data.length !== 0) {
-		const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
+		const index = data.findIndex(
+			(person) => person.name === displayName && person.likes === vidId
+		);		
 		if (index > -1) {
 			data.splice(index, 1);
 			context.setState({
@@ -309,7 +311,10 @@ async function disLike(context) {
 			return sendHelp(`您不是${displayName}本人，無法移除唷！`, context);
 		}
 	} else {
-		return sendHelp(`${displayName}，您目前沒有收藏任何片子，沒有東西可讓您移除喔。`, context);
+		return sendHelp(
+			`${displayName}，您目前沒有收藏任何片子，沒有東西可讓您移除喔。`,
+			context
+		);		
 	}
 }
 
@@ -319,7 +324,9 @@ async function like(context) {
 		const vidId = context.state.currentVidID;
 		context.setState( { currentLikeVidID: vidId } );
 		const data = context.state.collectors;
-		const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
+		const index = data.findIndex(
+			(person) => person.name === displayName && person.likes === vidId
+		);		
 		
 		// 已收藏
 		if (index > -1) {
@@ -353,7 +360,9 @@ async function likeSpecific(context) {
 	context.setState( { currentLikeVidID: vidId } );
 	const { displayName } = await context.getUserProfile();
 	const data = context.state.collectors;
-	const index = data.findIndex(person => person.name === displayName && person.likes === vidId);
+	const index = data.findIndex(
+		(person) => person.name === displayName && person.likes === vidId
+	);	
 	if (index > -1) {
 		await context.sendText(`您已收藏過「${vidId}」囉！`);
 		await myLikes(context);
@@ -474,17 +483,6 @@ async function myLikes(context) {
 								"align": "center",
 								"decoration": "none"
 							},
-							// {
-							// 	"type": "text",
-							// 	"text": "查看",
-							// 	"size": "md",
-							// 	"margin": "none",
-							// 	"flex": 5,
-							// 	"align": "center",
-							// 	"offsetStart": "md",
-							// 	"weight": "bold",
-							// 	"decoration": "none"
-							// },
 							{
 								"type": "text",
 								"text": "移除",
@@ -553,7 +551,9 @@ async function getPreviewURLById(vidId) {
 		if (typeof(pageText) === 'string') {
 			console.log('Cid 解析');
 			const totalPage = Number(pageText[0]);
-			const lowerVidsId = `${vidId.split('-')[0]}${vidId.split('-')[1]}`.toLowerCase();
+			const lowerVidsId = `${vidId.split("-")[0]}${
+				vidId.split("-")[1]
+			}`.toLowerCase();			
 			const formattedVid = `^${lowerVidsId}{1}$`;
 			const cidRegex = new RegExp(formattedVid);
 			for ( var i = 1; i <= totalPage; i++ ) {
@@ -601,19 +601,10 @@ async function sendSpecificVid(context) {
 	}
 }
 
-const test = async (context) => {
-  const videoId = "SSIS-001";
-  const response = await got(
-    `https://dmm-api-for-wdywwyd.herokuapp.com/trailers?vid_id=${videoId}`
-  );
-  const buffer = JSON.parse(response.body);
-  await context.sendText(buffer.tailer_url);
-};
-
-
 async function castInfo(context) {
 	async function getCastInfoMetaDataByName(cast) {
-		const response = await got(`https://dmm-api-for-wdywwyd.herokuapp.com/casts_info?cast=${cast}`);
+		const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com';
+		const response = await got(`${apiUrl}/casts_info?cast=${cast}`);
 		const castMetaData = JSON.parse(response.body);
 		const profilePicURL = castMetaData.img_url;
 		const birthDate = castMetaData.birth_date;
@@ -696,7 +687,7 @@ async function castInfo(context) {
 										{
 											"type": "text",
 											"text": castInfoMetaData.birthDate,
-											"size": "xs",
+											"size": "sm",
 											"color": "#AAAAAA",
 											"margin": "none",
 											"flex": 5,
@@ -895,36 +886,47 @@ const sendTrailer = async context => {
 }
 
 const top10Vids = async context => {
-	const getDvdMetaDataByFanzaCode = async fanzaCode => {
+	const getDvdMetaDataByFanzaCode = async (fanzaCode) => {
 		const response = await got(`https://www.libredmm.com/search?q=${fanzaCode}`);
 		const $ = cheerio.load(response.body);
 		return {
-			releaseDate: $('body > main > div > div.col-md-4 > dl > dd:nth-child(4)')[0].children.find(child => child.type == 'text').data,
-			vidId: $('body > main > h1 > span:nth-child(1)')[0].children.find(child => child.type == 'text').data
-		}
-	}
-
-	const getFanzaCastIdByCastName = async castName => {
-		const response = await got(`https://www.libredmm.com/actresses?fuzzy=${castName}`);
+			releaseDate: $(
+				"body > main > div > div.col-md-4 > dl > dd:nth-child(4)"
+			)[0].children.find((child) => child.type == "text").data,
+			vidId: $("body > main > h1 > span:nth-child(1)")[0].children.find(
+				(child) => child.type == "text"
+			).data,
+		};
+	};
+	
+	const getFanzaCastIdByCastName = async (castName) => {
+		const response = await got(
+			`https://www.libredmm.com/actresses?fuzzy=${castName}`
+		);
 		const $ = cheerio.load(response.body);
-		return $('.card-title > a')[0].attribs.href.split('/')[2];
-	}
+		return $(".card-title > a")[0].attribs.href.split("/")[2];
+	};	
 
-	const get10VidsIdByCastName = async castName => {
+	const get10VidsIdByCastName = async (castName) => {
 		const fanzaCastId = await getFanzaCastIdByCastName(castName);
-		const response = await got(`https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/id=${fanzaCastId}/sort=review_rank/`, {
-			headers: { 'User-Agent': 'Android', 'Cookie': 'age_check_done=1' }
-		});
+		const response = await got(
+			`https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/id=${fanzaCastId}/sort=review_rank/`,
+			{
+				headers: { "User-Agent": "Android", Cookie: "age_check_done=1" },
+			}
+		);
 		const $ = cheerio.load(response.body);
-		const castTopVidsItems = $('.flb-works > a').slice(0, 10);
+		const castTopVidsItems = $(".flb-works > a").slice(0, 10);
 		const arr = [];
-		await Promise.all(castTopVidsItems.map(async (_, castItem) => {
-			const fanzaCode = castItem.attribs.href.split('cid=')[1].split('/')[0];
-			const dvdMetaData = await getDvdMetaDataByFanzaCode(fanzaCode);
-			arr.push(dvdMetaData);
-		}));
-		return _.reverse(_.sortBy(arr, ['user', 'releaseDate']));
-	}
+		await Promise.all(
+			castTopVidsItems.map(async (_, castItem) => {
+				const fanzaCode = castItem.attribs.href.split("cid=")[1].split("/")[0];
+				const dvdMetaData = await getDvdMetaDataByFanzaCode(fanzaCode);
+				arr.push(dvdMetaData);
+			})
+		);
+		return _.reverse(_.sortBy(arr, ["user", "releaseDate"]));
+	};	
 
 	const castName = context.event.text.split('「')[1].split('」')[0];
 	const topRated10 = await get10VidsIdByCastName(castName);
@@ -1036,6 +1038,10 @@ const top10Vids = async context => {
 		}
 	});
 }
+
+const test = async context => {
+  await context.sendText('Test function.');
+};
 
 module.exports = async function App() {
 	return router([
