@@ -910,7 +910,7 @@ const top10Vids = async context => {
 	const get10VidsIdByCastName = async (castName) => {
 		const fanzaCastId = await getFanzaCastIdByCastName(castName);
 		const response = await got(
-			`https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/id=${fanzaCastId}/sort=review_rank/`,
+			`https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/device=video/id=${fanzaCastId}/sort=ranking/`,
 			{
 				headers: { "User-Agent": "Android", Cookie: "age_check_done=1" },
 			}
