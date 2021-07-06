@@ -24,7 +24,6 @@
     "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "lodash": "^4.17.21",
     "parameterize": "^1.0.0",
-    "prettier": "2.3.0",
     "upper-case": "^2.0.2"
   },
   "engines": {
