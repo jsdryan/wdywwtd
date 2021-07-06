@@ -4,6 +4,16 @@ const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
 const fs = require('fs');
+const httpsUrl = require('https-url');
+const {
+  getCastInfoFlexMessageObject,
+  getVideoInfoFlexMessageObject,
+  getCastsNameFlexMessageObject,
+  getUserLikesListFlexMessageObject,
+  getUserLikedItemsFlexMessageObject,
+  getHighRatedVideoListFlexMessageObject,
+  getHighRatedItemsFlexMessageObject,
+} = require('./flex-message-templates.js');
 
 async function getLocalDate() {
   if (!Date.prototype.toISODate) {
@@ -61,192 +71,22 @@ async function getRandomMetaData() {
   return specificMetaData;
 }
 
-async function sendInfoByMetaData(metaData, context) {
-  const vidId = metaData.vidId;
-  const coverUrl = metaData.coverUrl;
-  const casts = metaData.casts;
-  const releaseDate = metaData.releaseDate;
-  const source1 = `https://jable.tv/videos/${vidId}/`;
-  const source2 = `https://www2.javhdporn.net/video/${vidId}/`;
+async function sendVideoInfoByMetaData(videoInfoMetaData, context) {
+  const videoSourceUrl = [
+    `https://jable.tv/videos/${videoInfoMetaData.vidId}/`,
+    `https://www2.javhdporn.net/video/${videoInfoMetaData.vidId}/`,
+  ];
 
-  async function getCastsFlexContent() {
-    const castsArray = casts.split('、');
-    const castFlexContents = [];
-    for (let i = 0; i < castsArray.length; i++) {
-      const castObj = {
-        type: 'box',
-        layout: 'baseline',
-        spacing: 'sm',
-        margin: 'lg',
-        contents: [
-          {
-            type: 'text',
-            text: '演員',
-            color: i === 0 ? '#aaaaaa' : '#FFFFFF',
-            size: 'md',
-            flex: 5,
-            align: 'center',
-          },
-          {
-            type: 'text',
-            text: castsArray[i],
-            color: '#007bff',
-            size: 'md',
-            flex: 5,
-            align: 'center',
-            wrap: true,
-            action: {
-              type: 'message',
-              label: 'action',
-              text: `演員資訊「${castsArray[i]}」`,
-            },
-          },
-        ],
-      };
-      castFlexContents.push(castObj);
-    }
-    return castFlexContents;
-  }
+  await context.sendFlex(
+    `「${videoInfoMetaData.vidId}」影片資訊。`,
+    getVideoInfoFlexMessageObject(
+      videoInfoMetaData,
+      getCastsNameFlexMessageObject(videoInfoMetaData.casts),
+      videoSourceUrl
+    )
+  );
 
-  await context.sendFlex(`「${vidId}」影片資訊。`, {
-    type: 'bubble',
-    size: 'kilo',
-    hero: {
-      type: 'image',
-      url: coverUrl,
-      size: 'full',
-      aspectRatio: '20:13',
-      aspectMode: 'cover',
-      action: {
-        type: 'uri',
-        uri: coverUrl,
-      },
-    },
-    body: {
-      type: 'box',
-      layout: 'vertical',
-      contents: [
-        {
-          type: 'text',
-          text: vidId,
-          weight: 'bold',
-          size: 'xl',
-          align: 'center',
-        },
-        {
-          type: 'box',
-          layout: 'vertical',
-          margin: 'lg',
-          spacing: 'sm',
-          contents: [
-            ...(await getCastsFlexContent()),
-            {
-              type: 'box',
-              layout: 'baseline',
-              spacing: 'sm',
-              margin: 'lg',
-              contents: [
-                {
-                  type: 'text',
-                  text: '發行日',
-                  color: '#aaaaaa',
-                  size: 'md',
-                  flex: 5,
-                  align: 'center',
-                },
-                {
-                  type: 'text',
-                  text: releaseDate,
-                  color: '#666666',
-                  size: 'md',
-                  flex: 5,
-                  align: 'center',
-                  wrap: true,
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    footer: {
-      type: 'box',
-      layout: 'vertical',
-      spacing: 'sm',
-      contents: [
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'message',
-            label: '預告片',
-            text: `預告片「${vidId}」`,
-          },
-        },
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'uri',
-            label: '片源 1',
-            uri: source1,
-          },
-        },
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'uri',
-            label: '片源 2',
-            uri: source2,
-          },
-        },
-        {
-          type: 'separator',
-          margin: 'md',
-        },
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'message',
-            label: '👍 我喜歡，收藏！',
-            text: `收藏 ${vidId}`,
-          },
-        },
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'message',
-            label: '👎 不喜歡，再抽！',
-            text: '抽',
-          },
-        },
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'message',
-            label: '😍 列出我的收藏！',
-            text: '我的收藏',
-          },
-        },
-        {
-          type: 'spacer',
-          size: 'sm',
-        },
-      ],
-      flex: 0,
-    },
-  });
-  context.setState({ currentVidID: vidId });
+  context.setState({ currentVidID: videoInfoMetaData.vidId });
   context.setState({ currentLikeVidID: '' });
 }
 
@@ -268,7 +108,7 @@ async function disLike(context) {
         collectors: data,
       });
       await context.sendText(`您移除了「${vidId}」`);
-      await myLikes(context);
+      await sendUserLikesList(context);
     } else {
       return sendHelp(`您不是${displayName}本人，無法移除唷！`, context);
     }
@@ -281,41 +121,6 @@ async function disLike(context) {
 }
 
 async function like(context) {
-  if (context.state.currentVidID !== '') {
-    const { displayName } = await context.getUserProfile();
-    const vidId = context.state.currentVidID;
-    context.setState({ currentLikeVidID: vidId });
-    const data = context.state.collectors;
-    const index = data.findIndex(
-      (person) => person.name === displayName && person.likes === vidId
-    );
-
-    // 已收藏
-    if (index > -1) {
-      await context.sendText(`您已收藏過「${vidId}」囉！`);
-      await myLikes(context);
-    } else {
-      context.setState({
-        currentVidID: vidId,
-        collectors: [
-          ...context.state.collectors,
-          {
-            date: await getLocalDate(),
-            name: displayName,
-            likes: vidId.trim(),
-          },
-        ],
-      });
-      await context.sendText(`您收藏了「${vidId}」`);
-      await myLikes(context);
-    }
-  } else {
-    context.setState({ currentLikeVidID: '' });
-    return sendHelp('請輸入「抽」或特定番號（例如：SSNI-001）。', context);
-  }
-}
-
-async function likeSpecific(context) {
   const { text } = context.event;
   const vidId = parameterize(
     text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
@@ -328,7 +133,7 @@ async function likeSpecific(context) {
   );
   if (index > -1) {
     await context.sendText(`您已收藏過「${vidId}」囉！`);
-    await myLikes(context);
+    await sendUserLikesList(context);
   } else {
     // 如果頻道目前所抽的番號與準備要收藏的相同，不須驗證番號是否存在即可收藏。
     if (context.state.currentVidID !== vidId) {
@@ -345,7 +150,7 @@ async function likeSpecific(context) {
           ],
         });
         await context.sendText(`您收藏了「${vidId}」`);
-        await myLikes(context);
+        await sendUserLikesList(context);
       } catch (error) {
         return sendHelp(error, context);
       }
@@ -361,12 +166,12 @@ async function likeSpecific(context) {
         ],
       });
       await context.sendText(`您收藏了「${vidId}」`);
-      await myLikes(context);
+      await sendUserLikesList(context);
     }
   }
 }
 
-async function myLikes(context) {
+async function sendUserLikesList(context) {
   const { displayName } = await context.getUserProfile();
   const data = context.state.collectors;
   const index = data.findIndex((person) => person.name === displayName);
@@ -374,123 +179,13 @@ async function myLikes(context) {
     return sendHelp(`${displayName}，您目前沒有收藏任何片子喔。`, context);
   } else {
     const currentLikeVidID = context.state.currentLikeVidID;
-    const flexContent = [];
-    _.forEach(_.groupBy(data, 'name')[displayName], (value) => {
-      flexContent.unshift({
-        type: 'box',
-        layout: 'baseline',
-        margin: 'xxl',
-        contents: [
-          {
-            type: 'text',
-            text: value.likes,
-            size: 'sm',
-            color: '#007bff',
-            margin: 'none',
-            flex: 5,
-            align: 'center',
-            decoration: currentLikeVidID === value.likes ? 'underline' : 'none',
-            action: {
-              type: 'message',
-              label: 'action',
-              text: value.likes,
-            },
-          },
-          {
-            type: 'text',
-            text: '移除',
-            size: 'sm',
-            color: '#dc3545',
-            margin: 'none',
-            flex: 5,
-            align: 'center',
-            offsetStart: 'md',
-            decoration: 'none',
-            action: {
-              type: 'message',
-              label: 'action',
-              text: `移除 ${value.likes}`,
-            },
-          },
-        ],
-      });
-    });
-    await context.sendFlex(`${displayName}的收藏清單`, {
-      type: 'bubble',
-      size: 'kilo',
-      body: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'text',
-            text: `${displayName}的收藏清單`,
-            align: 'center',
-            size: 'lg',
-            weight: 'bold',
-          },
-          {
-            type: 'box',
-            layout: 'baseline',
-            margin: 'xxl',
-            contents: [
-              {
-                type: 'text',
-                text: '番號',
-                size: 'md',
-                margin: 'none',
-                flex: 5,
-                weight: 'bold',
-                align: 'center',
-                decoration: 'none',
-              },
-              {
-                type: 'text',
-                text: '移除',
-                size: 'md',
-                margin: 'none',
-                flex: 5,
-                align: 'center',
-                offsetStart: 'md',
-                weight: 'bold',
-                decoration: 'none',
-              },
-            ],
-          },
-          {
-            type: 'separator',
-            margin: 'none',
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'none',
-            spacing: 'md',
-            contents: [...flexContent],
-          },
-        ],
-      },
-      footer: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'separator',
-          },
-          {
-            type: 'text',
-            text: '😜 抽更多片片！',
-            align: 'center',
-            margin: 'lg',
-            action: {
-              type: 'message',
-              label: 'action',
-              text: '抽',
-            },
-          },
-        ],
-      },
-    });
+    await context.sendFlex(
+      `${displayName}的收藏清單`,
+      getUserLikesListFlexMessageObject(
+        displayName,
+        getUserLikedItemsFlexMessageObject(data, displayName, currentLikeVidID)
+      )
+    );
   }
   context.setState({ currentLikeVidID: '' });
 }
@@ -577,22 +272,23 @@ async function getTrailerUrlById(vidId) {
   }
 }
 
-async function sendRandomVid(context) {
+async function sendRandomVideo(context) {
   const metaData = await getRandomMetaData();
-  await sendInfoByMetaData(metaData, context);
+  await sendVideoInfoByMetaData(metaData, context);
 }
 
-async function sendSpecificVid(context) {
+async function sendSpecificVideo(context) {
   try {
     const vidId = parameterize(context.event.text).toUpperCase();
     const metaData = await getSpecificMetaDataByVidId(vidId);
-    await sendInfoByMetaData(metaData, context);
+    await sendVideoInfoByMetaData(metaData, context);
   } catch (error) {
-    return sendHelp('沒有這部片子喔！', context);
+    // return sendHelp('沒有這部片子喔！', context);
+    console.log(error);
   }
 }
 
-async function castInfo(context) {
+async function sendCastInfo(context) {
   async function getCastInfoMetaDataByName(cast) {
     const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com';
     const response = await got(`${apiUrl}/casts_info?cast=${cast}`);
@@ -617,271 +313,23 @@ async function castInfo(context) {
 
   const castName = context.event.text.split('「')[1].split('」')[0];
   const castInfoMetaData = await getCastInfoMetaDataByName(castName);
-  await context.sendFlex(`「${castName}」資訊`, {
-    type: 'bubble',
-    size: 'kilo',
-    header: {
-      type: 'box',
-      layout: 'vertical',
-      contents: [
-        {
-          type: 'text',
-          text: castName,
-          align: 'center',
-          size: 'lg',
-          weight: 'bold',
-          margin: 'none',
-          style: 'normal',
-          offsetTop: 'none',
-          offsetBottom: 'none',
-        },
-      ],
-    },
-    hero: {
-      type: 'image',
-      size: 'full',
-      url: castInfoMetaData.profilePicURL,
-    },
-    body: {
-      type: 'box',
-      layout: 'vertical',
-      contents: [
-        {
-          type: 'box',
-          layout: 'vertical',
-          contents: [
-            {
-              type: 'text',
-              text: '基本資料',
-              align: 'center',
-              size: 'lg',
-              weight: 'bold',
-              margin: 'xxl',
-              style: 'normal',
-              offsetTop: 'none',
-              offsetBottom: 'none',
-            },
-            {
-              type: 'box',
-              layout: 'vertical',
-              contents: [
-                {
-                  type: 'box',
-                  layout: 'baseline',
-                  margin: 'lg',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '生日',
-                      size: 'sm',
-                      color: '#999999',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      decoration: 'none',
-                    },
-                    {
-                      type: 'text',
-                      text: castInfoMetaData.birthDate,
-                      size: 'sm',
-                      color: '#AAAAAA',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      offsetStart: 'md',
-                      decoration: 'none',
-                    },
-                  ],
-                },
-                {
-                  type: 'box',
-                  layout: 'baseline',
-                  margin: 'lg',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '身高',
-                      size: 'sm',
-                      color: '#999999',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      decoration: 'none',
-                    },
-                    {
-                      type: 'text',
-                      text: `${castInfoMetaData.height}`,
-                      size: 'sm',
-                      color: '#AAAAAA',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      offsetStart: 'md',
-                      decoration: 'none',
-                    },
-                  ],
-                },
-                {
-                  type: 'box',
-                  layout: 'baseline',
-                  margin: 'lg',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '胸圍',
-                      size: 'sm',
-                      color: '#999999',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      decoration: 'none',
-                    },
-                    {
-                      type: 'text',
-                      text: `${castInfoMetaData.bust}`,
-                      size: 'sm',
-                      color: '#AAAAAA',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      offsetStart: 'md',
-                      decoration: 'none',
-                    },
-                  ],
-                },
-                {
-                  type: 'box',
-                  layout: 'baseline',
-                  margin: 'lg',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '罩杯',
-                      size: 'sm',
-                      color: '#999999',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      decoration: 'none',
-                    },
-                    {
-                      type: 'text',
-                      text: `${castInfoMetaData.cup}`,
-                      size: 'sm',
-                      color: '#AAAAAA',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      offsetStart: 'md',
-                      decoration: 'none',
-                    },
-                  ],
-                },
-                {
-                  type: 'box',
-                  layout: 'baseline',
-                  margin: 'lg',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '腰圍',
-                      size: 'sm',
-                      color: '#999999',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      decoration: 'none',
-                    },
-                    {
-                      type: 'text',
-                      text: `${castInfoMetaData.waist}`,
-                      size: 'sm',
-                      color: '#AAAAAA',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      offsetStart: 'md',
-                      decoration: 'none',
-                    },
-                  ],
-                },
-                {
-                  type: 'box',
-                  layout: 'baseline',
-                  margin: 'lg',
-                  contents: [
-                    {
-                      type: 'text',
-                      text: '臀圍',
-                      size: 'sm',
-                      color: '#999999',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      decoration: 'none',
-                    },
-                    {
-                      type: 'text',
-                      text: `${castInfoMetaData.hips}`,
-                      size: 'sm',
-                      color: '#AAAAAA',
-                      margin: 'none',
-                      flex: 5,
-                      align: 'center',
-                      offsetStart: 'md',
-                      decoration: 'none',
-                    },
-                  ],
-                },
-              ],
-              margin: 'none',
-              offsetEnd: 'none',
-              offsetBottom: 'none',
-            },
-          ],
-          offsetBottom: 'xxl',
-        },
-      ],
-    },
-    footer: {
-      type: 'box',
-      layout: 'vertical',
-      spacing: 'sm',
-      contents: [
-        {
-          type: 'separator',
-          margin: 'md',
-        },
-        {
-          type: 'button',
-          style: 'link',
-          height: 'sm',
-          action: {
-            type: 'message',
-            label: '列出前 10 高評價作品',
-            text: `前 10 高評價作品「${castName}」`,
-          },
-        },
-        {
-          type: 'spacer',
-          size: 'sm',
-        },
-      ],
-      flex: 0,
-    },
-  });
+  await context.sendFlex(
+    `「${castName}」資訊`,
+    getCastInfoFlexMessageObject(castName, castInfoMetaData)
+  );
 }
 
 const sendTrailer = async (context) => {
   const vidId = context.event.text.split('「')[1].split('」')[0];
+  const coverUrl = await (await getSpecificMetaDataByVidId(vidId)).coverUrl;
   const videoTrailerUrl = await getTrailerUrlById(vidId);
   await context.sendVideo({
-    originalContentUrl: videoTrailerUrl,
-    previewImageUrl: videoTrailerUrl,
+    originalContentUrl: httpsUrl(videoTrailerUrl),
+    previewImageUrl: httpsUrl(coverUrl),
   });
 };
 
-const top10Vids = async (context) => {
+const sendHighRatedVideos = async (context) => {
   const getDvdMetaDataByFanzaCode = async (fanzaCode) => {
     const response = await got(
       `https://www.libredmm.com/search?q=${fanzaCode}`
@@ -905,7 +353,7 @@ const top10Vids = async (context) => {
     return metaData.fanza_cast_code;
   };
 
-  const get10VidsIdByCastName = async (castName) => {
+  const getHighRatedVideosArrayByCastName = async (castName) => {
     const apiUrl =
       'https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/device=video';
     const fanzaCastId = await getFanzaCastIdByCastName(castName);
@@ -926,114 +374,17 @@ const top10Vids = async (context) => {
   };
 
   const castName = context.event.text.split('「')[1].split('」')[0];
-  const topRated10 = await get10VidsIdByCastName(castName);
-  const topRated10FlexContent = [];
-  for (const vid of topRated10) {
-    const obj = {
-      type: 'box',
-      layout: 'baseline',
-      margin: 'xxl',
-      contents: [
-        {
-          type: 'text',
-          text: vid.releaseDate,
-          size: 'sm',
-          color: '#999999',
-          margin: 'none',
-          flex: 5,
-          align: 'center',
-          decoration: 'none',
-        },
-        {
-          type: 'text',
-          text: vid.vidId,
-          size: 'sm',
-          color: '#007bff',
-          margin: 'none',
-          flex: 5,
-          align: 'center',
-          offsetStart: 'md',
-          decoration: 'none',
-          action: {
-            type: 'message',
-            label: 'action',
-            text: vid.vidId,
-          },
-        },
-      ],
-    };
-    topRated10FlexContent.push(obj);
-  }
+  const highRatedVideosArray = await getHighRatedVideosArrayByCastName(
+    castName
+  );
 
-  await context.sendFlex(`「${castName}」的高評價作品`, {
-    type: 'bubble',
-    size: 'kilo',
-    body: {
-      type: 'box',
-      layout: 'vertical',
-      contents: [
-        {
-          type: 'box',
-          layout: 'vertical',
-          contents: [
-            {
-              type: 'text',
-              text: `「${castName}」作品`,
-              align: 'center',
-              size: 'lg',
-              wrap: true,
-              weight: 'bold',
-              margin: 'xxl',
-              style: 'normal',
-              offsetTop: 'none',
-              offsetBottom: 'xxl',
-            },
-            {
-              type: 'box',
-              layout: 'baseline',
-              margin: 'xxl',
-              contents: [
-                {
-                  type: 'text',
-                  text: '發售日',
-                  size: 'md',
-                  margin: 'none',
-                  flex: 5,
-                  weight: 'bold',
-                  align: 'center',
-                  decoration: 'none',
-                },
-                {
-                  type: 'text',
-                  text: '番號',
-                  size: 'md',
-                  margin: 'none',
-                  flex: 5,
-                  align: 'center',
-                  offsetStart: 'md',
-                  weight: 'bold',
-                  decoration: 'none',
-                },
-              ],
-              offsetBottom: 'none',
-              offsetTop: 'none',
-            },
-            {
-              type: 'separator',
-              margin: 'none',
-            },
-            {
-              type: 'box',
-              layout: 'vertical',
-              margin: 'none',
-              spacing: 'md',
-              contents: [...topRated10FlexContent],
-            },
-          ],
-        },
-      ],
-    },
-  });
+  await context.sendFlex(
+    `「${castName}」的高評價作品`,
+    getHighRatedVideoListFlexMessageObject(
+      castName,
+      getHighRatedItemsFlexMessageObject(highRatedVideosArray)
+    )
+  );
 };
 
 const test = async (context) => {
@@ -1042,16 +393,15 @@ const test = async (context) => {
 
 module.exports = async function App() {
   return router([
-    text(/^抽{1}$/, sendRandomVid),
-    text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVid),
-    text(/^收藏$/, like),
-    text(/^test$/, test),
-    text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, likeSpecific),
+    text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVideo),
+    text(/^抽{1}$/, sendRandomVideo),
+    text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, like),
     text(/^移除\s?[A-Za-z]+[\s\-]?\d+$/, disLike),
-    text(/^演員資訊「.+」$/, castInfo),
+    text(/^演員資訊「.+」$/, sendCastInfo),
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
-    text(/^前 10 高評價作品「.+」$/, top10Vids),
-    text(/^我的收藏$/, myLikes),
+    text(/^高評價作品「.+」$/, sendHighRatedVideos),
+    text(/^我的收藏$/, sendUserLikesList),
+    text(/^test$/, test),
     // route('*', sendHelp),
   ]);
 };

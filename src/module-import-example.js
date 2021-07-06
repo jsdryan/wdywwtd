@@ -1,2 +1,2 @@
-const { firstName } = require('./module-export-example.js');
-console.log(firstName);
+const { testFunc } = require('./module-export-example.js');
+testFunc('hello');
