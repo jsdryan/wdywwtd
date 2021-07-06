@@ -3,7 +3,6 @@ const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
-const httpsUrl = require('https-url');
 const fs = require('fs');
 
 async function getLocalDate() {
@@ -506,22 +505,75 @@ async function getTrailerUrlById(vidId) {
       const res = await got.head(trailerUrl);
       return res.statusCode === 200;
     } catch (error) {
-      console.log(error);
       return false;
     }
   };
 
+  const getHqByOriginalVideoTrailerSrcUrl = async (videoTrailerSrcUrl) => {
+    const hqVersionSrc = videoTrailerSrcUrl.replace(/_(dmb|dm|sm)_/, '_dmb_');
+    if (await isTrailerUrlExists(hqVersionSrc)) {
+      return hqVersionSrc;
+    } else {
+      return videoTrailerSrcUrl;
+    }
+  };
+
+  const getTrailerUrlFromDmmByVidId = async (vidId) => {
+    const dmmUrl = 'https://www.dmm.co.jp';
+    let src = '';
+    try {
+      let res = await got(`${dmmUrl}/search/=/searchstr=${vidId}`, {
+        headers: { 'user-agent': 'Android' },
+      });
+      let $ = cheerio.load(res.body);
+      const pageText = $('.count-page').text().split('／')[2] || 1;
+      if (typeof pageText === 'string') {
+        const totalPage = Number(pageText[0]);
+        const lowerVidsId = `${vidId.split('-')[0]}${
+          vidId.split('-')[1]
+        }`.toLowerCase();
+        const formattedVid = `^${lowerVidsId}{1}$`;
+        const cidRegex = new RegExp(formattedVid);
+        for (let i = 1; i <= totalPage; i++) {
+          const url = `${dmmUrl}/search/=/searchstr=${vidId}/page=${i}/`;
+          console.log(`DMM page: ${url}`);
+          res = await got(url, { headers: { 'user-agent': 'Android' } });
+          $ = cheerio.load(res.body);
+          _.forEach($('a.play-btn'), async (value) => {
+            const cid = value.attribs.cid;
+            if (cidRegex.test(cid)) {
+              src = value.attribs.href;
+              return false;
+            }
+          });
+        }
+      } else {
+        src = $('a.play-btn').attr('href');
+      }
+      if (src === undefined) {
+        return '';
+      }
+    } catch (_) {}
+    return src;
+  };
+
   const trailerUrl = (await getSpecificMetaDataByVidId(vidId)).trailerVideoUrl;
+
   if (await isTrailerUrlExists(trailerUrl)) {
-    return httpsUrl(trailerUrl);
-  } else if (
-    await isTrailerUrlExists(
-      `https://www.prestige-av.com/sample_movie/TKT${vidId}.mp4`
-    )
-  ) {
-    return httpsUrl(`https://www.prestige-av.com/sample_movie/TKT${vidId}.mp4`);
+    return await getHqByOriginalVideoTrailerSrcUrl(trailerUrl);
   } else {
-    return httpsUrl(`https://www.prestige-av.com/sample_movie/${vidId}.mp4`);
+    const dmmTrailerUrl = await getTrailerUrlFromDmmByVidId(vidId);
+    if (await isTrailerUrlExists(dmmTrailerUrl)) {
+      return await getHqByOriginalVideoTrailerSrcUrl(dmmTrailerUrl);
+    } else if (
+      await isTrailerUrlExists(
+        `https://www.prestige-av.com/sample_movie/TKT${vidId}.mp4`
+      )
+    ) {
+      return `https://www.prestige-av.com/sample_movie/TKT${vidId}.mp4`;
+    } else {
+      return `https://www.prestige-av.com/sample_movie/${vidId}.mp4`;
+    }
   }
 }
 
@@ -536,7 +588,7 @@ async function sendSpecificVid(context) {
     const metaData = await getSpecificMetaDataByVidId(vidId);
     await sendInfoByMetaData(metaData, context);
   } catch (error) {
-    return sendHelp(error, context);
+    return sendHelp('沒有這部片子喔！', context);
   }
 }
 
