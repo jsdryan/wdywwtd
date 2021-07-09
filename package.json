@@ -10,21 +10,16 @@
   },
   "dependencies": {
     "array-to-txt-file": "^1.0.2",
-    "axios": "^0.21.1",
     "bottender": "1.5.1-alpha.9",
     "cheerio": "^1.0.0-rc.9",
-    "date-time": "^4.0.0",
     "eslint": "7.27.0",
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "3.4.0",
     "got": "^11.8.2",
     "https-url": "^1.0.0",
     "jest": "27.0.3",
-    "kuroshiro": "^1.2.0",
-    "kuroshiro-analyzer-kuromoji": "^1.1.0",
     "lodash": "^4.17.21",
-    "parameterize": "^1.0.0",
-    "upper-case": "^2.0.2"
+    "parameterize": "^1.0.0"
   },
   "engines": {
     "node": "12.x"
