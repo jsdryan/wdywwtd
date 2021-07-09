@@ -292,11 +292,11 @@ async function getTrailerUrlById(vidId) {
 
 async function sendRandomVideo(context) {
   const metaData = await getRandomMetaData();
+  await loggingProcess(context, 'sendRandomVideo', metaData.vidId);
   await sendVideoInfoByMetaData(metaData, context);
 }
 
 async function sendSpecificVideo(context) {
-  await loggingProcess(context, 'sendSpecificVideo');
   try {
     const vidId = parameterize(context.event.text).toUpperCase();
     await loggingProcess(context, 'sendRandomVideo', vidId);
