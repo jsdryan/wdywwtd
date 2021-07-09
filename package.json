@@ -21,7 +21,8 @@
     "jest": "27.0.3",
     "lodash": "^4.17.21",
     "nodemon": "^2.0.10",
-    "parameterize": "^1.0.0"
+    "parameterize": "^1.0.0",
+    "serve-favicon": "^2.5.0"
   },
   "engines": {
     "node": "12.x"

@@ -1,4 +1,6 @@
 const express = require('express');
+const favicon = require('serve-favicon');
+const path = require('path');
 const { bottender } = require('bottender');
 
 const app = bottender({
@@ -16,6 +18,8 @@ app.prepare().then(() => {
   const verify = (req, _, buf) => {
     req.rawBody = buf.toString();
   };
+
+  server.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
   server.use(express.json({ verify }));
   server.use(express.urlencoded({ extended: false, verify }));
 
