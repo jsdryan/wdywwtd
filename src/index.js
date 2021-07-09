@@ -3,8 +3,9 @@ const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
-const fs = require('fs');
 const httpsUrl = require('https-url');
+const logger = require('heroku-logger');
+const { javLibraryJuneDataArray } = require('./javlibrary-data.js');
 const {
   getCastInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
@@ -14,6 +15,15 @@ const {
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
 } = require('./flex-message-templates.js');
+
+async function loggingProcess(context, actionName, target) {
+  const { displayName, pictureUrl } = await context.getUserProfile();
+  logger.info(`${actionName}`, {
+    displayName: displayName,
+    pictureUrl: pictureUrl || 'No profile picture.',
+    target: target,
+  });
+}
 
 async function getLocalDate() {
   if (!Date.prototype.toISODate) {
@@ -52,21 +62,26 @@ async function getSpecificMetaDataByVidId(vidId) {
 }
 
 async function getRandomMetaData() {
-  const getRandomVidIdFromTextFileByStream = (stream) => {
-    const chunks = [];
-    return new Promise((resolve, reject) => {
-      stream.on('data', (chunk) => {
-        const lines = chunk.split('\n');
-        chunks.push(Buffer.from(lines[_.random(1, 500)]));
-      });
-      stream.on('error', (err) => reject(err));
-      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    });
+  // const getRandomVidIdFromTextFileByStream = (stream) => {
+  //   const chunks = [];
+  //   return new Promise((resolve, reject) => {
+  //     stream.on('data', (chunk) => {
+  //       const lines = chunk.split('\n');
+  //       chunks.push(Buffer.from(lines[_.random(1, 500)]));
+  //     });
+  //     stream.on('error', (err) => reject(err));
+  //     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+  //   });
+  // };
+
+  const getRandomVideoId = async () => {
+    return javLibraryJuneDataArray[_.random(1, 500)];
   };
-  const stream = fs.createReadStream('./src/javlibrary-best-rated.txt', {
-    encoding: 'utf8',
-  });
-  const randomizedVidId = await getRandomVidIdFromTextFileByStream(stream);
+
+  // const stream = fs.createReadStream('./src/javlibrary-best-rated.txt', {
+  //   encoding: 'utf8',
+  // });
+  const randomizedVidId = await getRandomVideoId();
   const specificMetaData = await getSpecificMetaDataByVidId(randomizedVidId);
   return specificMetaData;
 }
@@ -97,6 +112,7 @@ async function disLike(context) {
   const vidId = parameterize(
     text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
   ).toUpperCase();
+
   if (data.length !== 0) {
     const index = data.findIndex(
       (person) => person.name === displayName && person.likes === vidId
@@ -125,6 +141,8 @@ async function like(context) {
   const vidId = parameterize(
     text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
   ).toUpperCase();
+  await loggingProcess(context, 'like', vidId);
+
   context.setState({ currentLikeVidID: vidId });
   const { displayName } = await context.getUserProfile();
   const data = context.state.collectors;
@@ -172,6 +190,8 @@ async function like(context) {
 }
 
 async function sendUserLikesList(context) {
+  await loggingProcess(context, 'sendUserLikesList', 'self');
+
   const { displayName } = await context.getUserProfile();
   const data = context.state.collectors;
   const index = data.findIndex((person) => person.name === displayName);
@@ -274,22 +294,25 @@ async function getTrailerUrlById(vidId) {
 
 async function sendRandomVideo(context) {
   const metaData = await getRandomMetaData();
+  await loggingProcess(context, 'sendRandomVideo', metaData.vidId);
   await sendVideoInfoByMetaData(metaData, context);
 }
 
 async function sendSpecificVideo(context) {
   try {
     const vidId = parameterize(context.event.text).toUpperCase();
+    await loggingProcess(context, 'sendRandomVideo', vidId);
+
     const metaData = await getSpecificMetaDataByVidId(vidId);
     await sendVideoInfoByMetaData(metaData, context);
   } catch (error) {
-    // return sendHelp('沒有這部片子喔！', context);
-    console.log(error);
+    return sendHelp('沒有這部片子喔！', context);
+    // console.log(error);
   }
 }
 
 async function sendCastInfo(context) {
-  async function getCastInfoMetaDataByName(cast) {
+  const getCastInfoMetaDataByName = async (cast) => {
     const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com';
     const response = await got(`${apiUrl}/casts_info?cast=${cast}`);
     const castMetaData = JSON.parse(response.body);
@@ -309,9 +332,11 @@ async function sendCastInfo(context) {
       waist,
       hips,
     };
-  }
+  };
 
   const castName = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendCastInfo', castName);
+
   const castInfoMetaData = await getCastInfoMetaDataByName(castName);
   await context.sendFlex(
     `「${castName}」資訊`,
@@ -319,17 +344,19 @@ async function sendCastInfo(context) {
   );
 }
 
-const sendTrailer = async (context) => {
+async function sendTrailer(context) {
   const vidId = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendTrailer', vidId);
+
   const coverUrl = await (await getSpecificMetaDataByVidId(vidId)).coverUrl;
   const videoTrailerUrl = await getTrailerUrlById(vidId);
   await context.sendVideo({
     originalContentUrl: httpsUrl(videoTrailerUrl),
     previewImageUrl: httpsUrl(coverUrl),
   });
-};
+}
 
-const sendHighRatedVideos = async (context) => {
+async function sendHighRatedVideos(context) {
   const getDvdMetaDataByFanzaCode = async (fanzaCode) => {
     const response = await got(
       `https://www.libredmm.com/search?q=${fanzaCode}`
@@ -374,6 +401,8 @@ const sendHighRatedVideos = async (context) => {
   };
 
   const castName = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendHighRatedVideos', castName);
+
   const highRatedVideosArray = await getHighRatedVideosArrayByCastName(
     castName
   );
@@ -385,7 +414,7 @@ const sendHighRatedVideos = async (context) => {
       getHighRatedItemsFlexMessageObject(highRatedVideosArray)
     )
   );
-};
+}
 
 const test = async (context) => {
   await context.sendText('Test function.');
