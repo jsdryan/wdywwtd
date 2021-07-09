@@ -18,9 +18,9 @@ const {
 
 async function loggingProcess(context, actionName, target) {
   const { displayName, pictureUrl } = await context.getUserProfile();
-  logger.info(actionName, {
+  logger.info(`${actionName} action`, {
     displayName: displayName,
-    pictureUrl: pictureUrl,
+    pictureUrl: pictureUrl || 'No profile picture.',
     target: target,
   });
 }
@@ -41,8 +41,6 @@ async function getLocalDate() {
 }
 
 async function getSpecificMetaDataByVidId(vidId) {
-  console.log(vidId);
-
   const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com/lf_video_metadata';
   const response = await got(apiUrl, {
     searchParams: { vid_id: vidId },
@@ -109,7 +107,6 @@ async function disLike(context) {
   const vidId = parameterize(
     text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
   ).toUpperCase();
-  await loggingProcess(context, 'disLike', vidId);
 
   if (data.length !== 0) {
     const index = data.findIndex(
@@ -304,8 +301,8 @@ async function sendSpecificVideo(context) {
     const metaData = await getSpecificMetaDataByVidId(vidId);
     await sendVideoInfoByMetaData(metaData, context);
   } catch (error) {
-    // return sendHelp('沒有這部片子喔！', context);
-    console.log(error);
+    return sendHelp('沒有這部片子喔！', context);
+    // console.log(error);
   }
 }
 
