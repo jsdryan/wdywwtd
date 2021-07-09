@@ -18,9 +18,11 @@ const {
 
 async function loggingProcess(context, actionName, target) {
   const { displayName, pictureUrl } = await context.getUserProfile();
-  logger.info(
-    `User [${displayName}] (${pictureUrl}) is doing action [${actionName}] with target [${target}].`
-  );
+  logger.info(actionName, {
+    displayName: displayName,
+    pictureUrl: pictureUrl,
+    target: target,
+  });
 }
 
 async function getLocalDate() {
