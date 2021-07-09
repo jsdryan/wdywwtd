@@ -6,6 +6,7 @@ const got = require('got');
 const fs = require('fs');
 const httpsUrl = require('https-url');
 const logger = require('heroku-logger');
+const { javLibraryJuneDataArray } = require('../assets/javlibrary-data.js');
 const {
   getCastInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
@@ -18,7 +19,7 @@ const {
 
 async function loggingProcess(context, actionName, target) {
   const { displayName, pictureUrl } = await context.getUserProfile();
-  logger.info(`${actionName} action`, {
+  logger.info(`${actionName}`, {
     displayName: displayName,
     pictureUrl: pictureUrl || 'No profile picture.',
     target: target,
@@ -62,21 +63,26 @@ async function getSpecificMetaDataByVidId(vidId) {
 }
 
 async function getRandomMetaData() {
-  const getRandomVidIdFromTextFileByStream = (stream) => {
-    const chunks = [];
-    return new Promise((resolve, reject) => {
-      stream.on('data', (chunk) => {
-        const lines = chunk.split('\n');
-        chunks.push(Buffer.from(lines[_.random(1, 500)]));
-      });
-      stream.on('error', (err) => reject(err));
-      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-    });
+  // const getRandomVidIdFromTextFileByStream = (stream) => {
+  //   const chunks = [];
+  //   return new Promise((resolve, reject) => {
+  //     stream.on('data', (chunk) => {
+  //       const lines = chunk.split('\n');
+  //       chunks.push(Buffer.from(lines[_.random(1, 500)]));
+  //     });
+  //     stream.on('error', (err) => reject(err));
+  //     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+  //   });
+  // };
+
+  const getRandomVideoId = async () => {
+    return javLibraryJuneDataArray[_.random(1, 500)];
   };
-  const stream = fs.createReadStream('./src/javlibrary-best-rated.txt', {
-    encoding: 'utf8',
-  });
-  const randomizedVidId = await getRandomVidIdFromTextFileByStream(stream);
+
+  // const stream = fs.createReadStream('./src/javlibrary-best-rated.txt', {
+  //   encoding: 'utf8',
+  // });
+  const randomizedVidId = await getRandomVideoId();
   const specificMetaData = await getSpecificMetaDataByVidId(randomizedVidId);
   return specificMetaData;
 }
