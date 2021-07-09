@@ -1,4 +1,4 @@
-const javLibraryJuneData = [
+const javLibraryJuneDataArray = [
   'ABW-087',
   'ABW-108',
   'ABW-096',
