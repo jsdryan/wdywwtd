@@ -3,10 +3,9 @@ const cheerio = require('cheerio');
 const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
-const fs = require('fs');
 const httpsUrl = require('https-url');
 const logger = require('heroku-logger');
-const { javLibraryJuneDataArray } = require('../assets/javlibrary-data.js');
+const { javLibraryJuneDataArray } = require('./javlibrary-data.js');
 const {
   getCastInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
