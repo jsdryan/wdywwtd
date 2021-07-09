@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const httpsUrl = require('https-url');
 
 const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
   return {
@@ -24,7 +25,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
     hero: {
       type: 'image',
       size: 'full',
-      url: castInfoMetaData.profilePicURL,
+      url: httpsUrl(castInfoMetaData.profilePicURL),
     },
     body: {
       type: 'box',
@@ -266,13 +267,13 @@ const getVideoInfoFlexMessageObject = (
     size: 'kilo',
     hero: {
       type: 'image',
-      url: videoInfoMetaData.coverUrl,
+      url: httpsUrl(videoInfoMetaData.coverUrl),
       size: 'full',
       aspectRatio: '20:13',
       aspectMode: 'cover',
       action: {
         type: 'uri',
-        uri: videoInfoMetaData.coverUrl,
+        uri: httpsUrl(videoInfoMetaData.coverUrl),
       },
     },
     body: {
