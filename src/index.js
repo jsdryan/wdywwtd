@@ -5,6 +5,7 @@ const _ = require('lodash');
 const got = require('got');
 const fs = require('fs');
 const httpsUrl = require('https-url');
+const logger = require('heroku-logger');
 const {
   getCastInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
@@ -14,6 +15,13 @@ const {
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
 } = require('./flex-message-templates.js');
+
+async function loggingProcess(context, actionName, target) {
+  const { displayName, pictureUrl } = await context.getUserProfile();
+  logger.info(
+    `User [${displayName}] (${pictureUrl}) is doing action [${actionName}] with target [${target}].`
+  );
+}
 
 async function getLocalDate() {
   if (!Date.prototype.toISODate) {
@@ -31,6 +39,8 @@ async function getLocalDate() {
 }
 
 async function getSpecificMetaDataByVidId(vidId) {
+  console.log(vidId);
+
   const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com/lf_video_metadata';
   const response = await got(apiUrl, {
     searchParams: { vid_id: vidId },
@@ -97,6 +107,8 @@ async function disLike(context) {
   const vidId = parameterize(
     text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
   ).toUpperCase();
+  await loggingProcess(context, 'disLike', vidId);
+
   if (data.length !== 0) {
     const index = data.findIndex(
       (person) => person.name === displayName && person.likes === vidId
@@ -125,6 +137,8 @@ async function like(context) {
   const vidId = parameterize(
     text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
   ).toUpperCase();
+  await loggingProcess(context, 'like', vidId);
+
   context.setState({ currentLikeVidID: vidId });
   const { displayName } = await context.getUserProfile();
   const data = context.state.collectors;
@@ -172,6 +186,8 @@ async function like(context) {
 }
 
 async function sendUserLikesList(context) {
+  await loggingProcess(context, 'sendUserLikesList', 'self');
+
   const { displayName } = await context.getUserProfile();
   const data = context.state.collectors;
   const index = data.findIndex((person) => person.name === displayName);
@@ -278,8 +294,11 @@ async function sendRandomVideo(context) {
 }
 
 async function sendSpecificVideo(context) {
+  await loggingProcess(context, 'sendSpecificVideo');
   try {
     const vidId = parameterize(context.event.text).toUpperCase();
+    await loggingProcess(context, 'sendRandomVideo', vidId);
+
     const metaData = await getSpecificMetaDataByVidId(vidId);
     await sendVideoInfoByMetaData(metaData, context);
   } catch (error) {
@@ -289,7 +308,7 @@ async function sendSpecificVideo(context) {
 }
 
 async function sendCastInfo(context) {
-  async function getCastInfoMetaDataByName(cast) {
+  const getCastInfoMetaDataByName = async (cast) => {
     const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com';
     const response = await got(`${apiUrl}/casts_info?cast=${cast}`);
     const castMetaData = JSON.parse(response.body);
@@ -309,9 +328,11 @@ async function sendCastInfo(context) {
       waist,
       hips,
     };
-  }
+  };
 
   const castName = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendCastInfo', castName);
+
   const castInfoMetaData = await getCastInfoMetaDataByName(castName);
   await context.sendFlex(
     `「${castName}」資訊`,
@@ -319,17 +340,19 @@ async function sendCastInfo(context) {
   );
 }
 
-const sendTrailer = async (context) => {
+async function sendTrailer(context) {
   const vidId = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendTrailer', vidId);
+
   const coverUrl = await (await getSpecificMetaDataByVidId(vidId)).coverUrl;
   const videoTrailerUrl = await getTrailerUrlById(vidId);
   await context.sendVideo({
     originalContentUrl: httpsUrl(videoTrailerUrl),
     previewImageUrl: httpsUrl(coverUrl),
   });
-};
+}
 
-const sendHighRatedVideos = async (context) => {
+async function sendHighRatedVideos(context) {
   const getDvdMetaDataByFanzaCode = async (fanzaCode) => {
     const response = await got(
       `https://www.libredmm.com/search?q=${fanzaCode}`
@@ -374,6 +397,8 @@ const sendHighRatedVideos = async (context) => {
   };
 
   const castName = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendHighRatedVideos', castName);
+
   const highRatedVideosArray = await getHighRatedVideosArrayByCastName(
     castName
   );
@@ -385,7 +410,7 @@ const sendHighRatedVideos = async (context) => {
       getHighRatedItemsFlexMessageObject(highRatedVideosArray)
     )
   );
-};
+}
 
 const test = async (context) => {
   await context.sendText('Test function.');
