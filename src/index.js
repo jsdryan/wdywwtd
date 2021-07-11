@@ -7,9 +7,9 @@ const httpsUrl = require('https-url');
 const logger = require('heroku-logger');
 const { javLibraryJuneDataArray } = require('./javlibrary-data.js');
 const {
-  getCastInfoFlexMessageObject,
+  getActressInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
-  getCastsNameFlexMessageObject,
+  getActresssNameFlexMessageObject,
   getUserLikesListFlexMessageObject,
   getUserLikedItemsFlexMessageObject,
   getHighRatedVideoListFlexMessageObject,
@@ -41,21 +41,21 @@ async function getLocalDate() {
 }
 
 async function getSpecificMetaDataByVidId(vidId) {
-  const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com/lf_video_metadata';
+  const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com/video_metadata';
   const response = await got(apiUrl, {
     searchParams: { vid_id: vidId },
   });
   const metadata = JSON.parse(response.body);
   const videoTitle = metadata.video_title;
   const coverUrl = metadata.video_cover_url;
-  const casts = metadata.casts_name;
+  const actresses = metadata.actresses_name;
   const releaseDate = metadata.released_at;
   const trailerVideoUrl = metadata.trailer_video_url;
   return {
     vidId,
     videoTitle,
     coverUrl,
-    casts,
+    actresses,
     releaseDate,
     trailerVideoUrl,
   };
@@ -96,7 +96,7 @@ async function sendVideoInfoByMetaData(videoInfoMetaData, context) {
     `「${videoInfoMetaData.vidId}」影片資訊。`,
     getVideoInfoFlexMessageObject(
       videoInfoMetaData,
-      getCastsNameFlexMessageObject(videoInfoMetaData.casts),
+      getActresssNameFlexMessageObject(videoInfoMetaData.actresses),
       videoSourceUrl
     )
   );
@@ -311,18 +311,18 @@ async function sendSpecificVideo(context) {
   }
 }
 
-async function sendCastInfo(context) {
-  const getCastInfoMetaDataByName = async (cast) => {
+async function sendActressInfo(context) {
+  const getActressInfoMetaDataByName = async (actress) => {
     const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com';
-    const response = await got(`${apiUrl}/casts_info?cast=${cast}`);
-    const castMetaData = JSON.parse(response.body);
-    const profilePicURL = castMetaData.img_url;
-    const birthDate = castMetaData.birth_date;
-    const height = `${castMetaData.height} 公分`;
-    const bust = `${castMetaData.bust} 公分`;
-    const cup = castMetaData.cup;
-    const waist = `${castMetaData.waist} 公分`;
-    const hips = `${castMetaData.hip} 公分`;
+    const response = await got(`${apiUrl}/actresses_info?actress=${actress}`);
+    const actressMetaData = JSON.parse(response.body);
+    const profilePicURL = actressMetaData.img_url;
+    const birthDate = actressMetaData.birth_date;
+    const height = `${actressMetaData.height} 公分`;
+    const bust = `${actressMetaData.bust} 公分`;
+    const cup = actressMetaData.cup;
+    const waist = `${actressMetaData.waist} 公分`;
+    const hips = `${actressMetaData.hip} 公分`;
     return {
       profilePicURL,
       birthDate,
@@ -334,13 +334,13 @@ async function sendCastInfo(context) {
     };
   };
 
-  const castName = context.event.text.split('「')[1].split('」')[0];
-  await loggingProcess(context, 'sendCastInfo', castName);
+  const actressName = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendActressInfo', actressName);
 
-  const castInfoMetaData = await getCastInfoMetaDataByName(castName);
+  const actressInfoMetaData = await getActressInfoMetaDataByName(actressName);
   await context.sendFlex(
-    `「${castName}」資訊`,
-    getCastInfoFlexMessageObject(castName, castInfoMetaData)
+    `「${actressName}」資訊`,
+    getActressInfoFlexMessageObject(actressName, actressInfoMetaData)
   );
 }
 
@@ -372,27 +372,29 @@ async function sendHighRatedVideos(context) {
     };
   };
 
-  const getFanzaCastIdByCastName = async (castName) => {
+  const getFanzaActressIdByActressName = async (actressName) => {
     const response = await got(
-      `https://dmm-api-for-wdywwyd.herokuapp.com/casts_info?cast=${castName}`
+      `https://dmm-api-for-wdywwyd.herokuapp.com/actresses_info?actress=${actressName}`
     );
     const metaData = JSON.parse(response.body);
-    return metaData.fanza_cast_code;
+    return metaData.fanza_actress_code;
   };
 
-  const getHighRatedVideosArrayByCastName = async (castName) => {
+  const getHighRatedVideosArrayByActressName = async (actressName) => {
     const apiUrl =
       'https://www.dmm.co.jp/digital/videoa/-/list/=/article=actress/device=video';
-    const fanzaCastId = await getFanzaCastIdByCastName(castName);
-    const response = await got(`${apiUrl}/id=${fanzaCastId}/sort=ranking/`, {
+    const fanzaActressId = await getFanzaActressIdByActressName(actressName);
+    const response = await got(`${apiUrl}/id=${fanzaActressId}/sort=ranking/`, {
       headers: { 'User-Agent': 'Android', Cookie: 'age_check_done=1' },
     });
     const $ = cheerio.load(response.body);
-    const castTopVidsItems = $('.flb-works > a').slice(0, 10);
+    const actressTopVidsItems = $('.flb-works > a').slice(0, 10);
     const arr = [];
     await Promise.all(
-      castTopVidsItems.map(async (_, castItem) => {
-        const fanzaCode = castItem.attribs.href.split('cid=')[1].split('/')[0];
+      actressTopVidsItems.map(async (_, actressItem) => {
+        const fanzaCode = actressItem.attribs.href
+          .split('cid=')[1]
+          .split('/')[0];
         const dvdMetaData = await getDvdMetaDataByFanzaCode(fanzaCode);
         arr.push(dvdMetaData);
       })
@@ -400,17 +402,17 @@ async function sendHighRatedVideos(context) {
     return _.reverse(_.sortBy(arr, ['user', 'releaseDate']));
   };
 
-  const castName = context.event.text.split('「')[1].split('」')[0];
-  await loggingProcess(context, 'sendHighRatedVideos', castName);
+  const actressName = context.event.text.split('「')[1].split('」')[0];
+  await loggingProcess(context, 'sendHighRatedVideos', actressName);
 
-  const highRatedVideosArray = await getHighRatedVideosArrayByCastName(
-    castName
+  const highRatedVideosArray = await getHighRatedVideosArrayByActressName(
+    actressName
   );
 
   await context.sendFlex(
-    `「${castName}」的高評價作品`,
+    `「${actressName}」的高評價作品`,
     getHighRatedVideoListFlexMessageObject(
-      castName,
+      actressName,
       getHighRatedItemsFlexMessageObject(highRatedVideosArray)
     )
   );
@@ -426,7 +428,7 @@ module.exports = async function App() {
     text(/^抽{1}$/, sendRandomVideo),
     text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, like),
     text(/^移除\s?[A-Za-z]+[\s\-]?\d+$/, disLike),
-    text(/^演員資訊「.+」$/, sendCastInfo),
+    text(/^演員資訊「.+」$/, sendActressInfo),
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的收藏$/, sendUserLikesList),

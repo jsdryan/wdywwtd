@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const httpsUrl = require('https-url');
 
-const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
+const getActressInfoFlexMessageObject = (actressName, actressInfoMetaData) => {
   return {
     type: 'bubble',
     size: 'kilo',
@@ -11,7 +11,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
       contents: [
         {
           type: 'text',
-          text: castName,
+          text: actressName,
           align: 'center',
           size: 'lg',
           weight: 'bold',
@@ -25,7 +25,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
     hero: {
       type: 'image',
       size: 'full',
-      url: httpsUrl(castInfoMetaData.profilePicURL),
+      url: httpsUrl(actressInfoMetaData.profilePicURL),
     },
     body: {
       type: 'box',
@@ -67,7 +67,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
                     },
                     {
                       type: 'text',
-                      text: castInfoMetaData.birthDate,
+                      text: actressInfoMetaData.birthDate,
                       size: 'sm',
                       color: '#AAAAAA',
                       margin: 'none',
@@ -95,7 +95,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
                     },
                     {
                       type: 'text',
-                      text: `${castInfoMetaData.height}`,
+                      text: `${actressInfoMetaData.height}`,
                       size: 'sm',
                       color: '#AAAAAA',
                       margin: 'none',
@@ -123,7 +123,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
                     },
                     {
                       type: 'text',
-                      text: `${castInfoMetaData.bust}`,
+                      text: `${actressInfoMetaData.bust}`,
                       size: 'sm',
                       color: '#AAAAAA',
                       margin: 'none',
@@ -151,7 +151,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
                     },
                     {
                       type: 'text',
-                      text: `${castInfoMetaData.cup}`,
+                      text: `${actressInfoMetaData.cup}`,
                       size: 'sm',
                       color: '#AAAAAA',
                       margin: 'none',
@@ -179,7 +179,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
                     },
                     {
                       type: 'text',
-                      text: `${castInfoMetaData.waist}`,
+                      text: `${actressInfoMetaData.waist}`,
                       size: 'sm',
                       color: '#AAAAAA',
                       margin: 'none',
@@ -207,7 +207,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
                     },
                     {
                       type: 'text',
-                      text: `${castInfoMetaData.hips}`,
+                      text: `${actressInfoMetaData.hips}`,
                       size: 'sm',
                       color: '#AAAAAA',
                       margin: 'none',
@@ -244,7 +244,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
           action: {
             type: 'message',
             label: '列出她的高評價作品',
-            text: `高評價作品「${castName}」`,
+            text: `高評價作品「${actressName}」`,
           },
         },
         {
@@ -259,7 +259,7 @@ const getCastInfoFlexMessageObject = (castName, castInfoMetaData) => {
 
 const getVideoInfoFlexMessageObject = (
   videoInfoMetaData,
-  castsNameFlexMessageObject,
+  actressesNameFlexMessageObject,
   videoSourceUrl
 ) => {
   return {
@@ -293,7 +293,7 @@ const getVideoInfoFlexMessageObject = (
           margin: 'lg',
           spacing: 'sm',
           contents: [
-            ...castsNameFlexMessageObject,
+            ...actressesNameFlexMessageObject,
             {
               type: 'box',
               layout: 'baseline',
@@ -402,11 +402,11 @@ const getVideoInfoFlexMessageObject = (
   };
 };
 
-const getCastsNameFlexMessageObject = (casts) => {
-  const castsArray = casts.split('、');
-  const castFlexContents = [];
-  for (let i = 0; i < castsArray.length; i++) {
-    const castObj = {
+const getActresssNameFlexMessageObject = (actresses) => {
+  const actressesArray = actresses.split('、');
+  const actressFlexContents = [];
+  for (let i = 0; i < actressesArray.length; i++) {
+    const actressObj = {
       type: 'box',
       layout: 'baseline',
       spacing: 'sm',
@@ -422,7 +422,7 @@ const getCastsNameFlexMessageObject = (casts) => {
         },
         {
           type: 'text',
-          text: castsArray[i],
+          text: actressesArray[i],
           color: '#007bff',
           size: 'md',
           flex: 5,
@@ -431,14 +431,14 @@ const getCastsNameFlexMessageObject = (casts) => {
           action: {
             type: 'message',
             label: 'action',
-            text: `演員資訊「${castsArray[i]}」`,
+            text: `演員資訊「${actressesArray[i]}」`,
           },
         },
       ],
     };
-    castFlexContents.push(castObj);
+    actressFlexContents.push(actressObj);
   }
-  return castFlexContents;
+  return actressFlexContents;
 };
 
 const getUserLikesListFlexMessageObject = (displayName, likedItems) => {
@@ -569,7 +569,10 @@ const getUserLikedItemsFlexMessageObject = (
   return flexContent;
 };
 
-const getHighRatedVideoListFlexMessageObject = (castName, highRatedItems) => {
+const getHighRatedVideoListFlexMessageObject = (
+  actressName,
+  highRatedItems
+) => {
   return {
     type: 'bubble',
     size: 'kilo',
@@ -583,7 +586,7 @@ const getHighRatedVideoListFlexMessageObject = (castName, highRatedItems) => {
           contents: [
             {
               type: 'text',
-              text: `「${castName}」作品`,
+              text: `「${actressName}」作品`,
               align: 'center',
               size: 'lg',
               wrap: true,
@@ -683,9 +686,9 @@ const getHighRatedItemsFlexMessageObject = (highRatedVideoIdArray) => {
 };
 
 module.exports = {
-  getCastInfoFlexMessageObject,
+  getActressInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
-  getCastsNameFlexMessageObject,
+  getActresssNameFlexMessageObject,
   getUserLikesListFlexMessageObject,
   getUserLikedItemsFlexMessageObject,
   getHighRatedVideoListFlexMessageObject,

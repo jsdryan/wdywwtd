@@ -7,7 +7,7 @@
 
 ## Todos
 
-- [ ] Showing Top 10 casts from Fanza.
-- [ ] Collecting casts.
+- [ ] Showing Top 10 actresses from Fanza.
+- [ ] Collecting actresses.
 - [ ] Setting channel's genre.
 - [ ] Implement recommender system.
