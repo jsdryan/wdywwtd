@@ -434,7 +434,7 @@ const getActresssNameFlexMessageObject = (actresses) => {
       contents: [
         {
           type: 'text',
-          text: '演員',
+          text: '女優',
           color: i === 0 ? '#aaaaaa' : '#FFFFFF',
           size: 'md',
           flex: 5,
@@ -451,7 +451,7 @@ const getActresssNameFlexMessageObject = (actresses) => {
           action: {
             type: 'message',
             label: 'action',
-            text: `演員資訊「${actressesArray[i]}」`,
+            text: `女優資訊「${actressesArray[i]}」`,
           },
         },
       ],
@@ -574,7 +574,7 @@ const getUserLikedItemsFlexMessageObject = (
             label: 'action',
             text: /[A-Za-z]+[\s\-]?\d+/.test(value.likes)
               ? value.likes
-              : `演員資訊「${value.likes}」`,
+              : `女優資訊「${value.likes}」`,
           },
         },
         {

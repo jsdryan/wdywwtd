@@ -424,7 +424,7 @@ module.exports = async function App() {
     text(/^抽{1}$/, sendRandomVideo),
     text(/^(收藏|追蹤)「.+」$/, like),
     text(/^(移除|取消追蹤)「.+」$/, disLike),
-    text(/^演員資訊「.+」$/, sendActressInfo),
+    text(/^女優資訊「.+」$/, sendActressInfo),
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的(收藏|追蹤)$/, sendUserLikesList),
