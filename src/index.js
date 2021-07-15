@@ -62,25 +62,10 @@ async function getSpecificMetaDataByVidId(vidId) {
 }
 
 async function getRandomMetaData() {
-  // const getRandomVidIdFromTextFileByStream = (stream) => {
-  //   const chunks = [];
-  //   return new Promise((resolve, reject) => {
-  //     stream.on('data', (chunk) => {
-  //       const lines = chunk.split('\n');
-  //       chunks.push(Buffer.from(lines[_.random(1, 500)]));
-  //     });
-  //     stream.on('error', (err) => reject(err));
-  //     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-  //   });
-  // };
-
   const getRandomVideoId = async () => {
     return javLibraryJuneDataArray[_.random(1, 500)];
   };
 
-  // const stream = fs.createReadStream('./src/javlibrary-best-rated.txt', {
-  //   encoding: 'utf8',
-  // });
   const randomizedVidId = await getRandomVideoId();
   const specificMetaData = await getSpecificMetaDataByVidId(randomizedVidId);
   return specificMetaData;
@@ -101,113 +86,124 @@ async function sendVideoInfoByMetaData(videoInfoMetaData, context) {
     )
   );
 
-  context.setState({ currentVidID: videoInfoMetaData.vidId });
-  context.setState({ currentLikeVidID: '' });
+  context.setState({ currentOperationItem: '' });
+}
+
+async function isItemExists(data, displayName, item, itemType) {
+  const index = data.findIndex(
+    (user) =>
+      user.name === displayName && user.likes === item && user.type === itemType
+  );
+  return index > -1;
 }
 
 async function disLike(context) {
   const { displayName } = await context.getUserProfile();
-  const { text } = context.event;
-  const data = context.state.collectors;
-  const vidId = parameterize(
-    text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
-  ).toUpperCase();
+  const item = context.event.text.split('「')[1].split('」')[0];
+  const isItemTypeVideo = /[A-Za-z]+[\s\-]?\d+/.test(item);
+  const removeOrUnfollow = isItemTypeVideo ? '移除' : '取消追蹤';
+  const itemType = isItemTypeVideo ? 'video' : 'actress';
 
-  if (data.length !== 0) {
-    const index = data.findIndex(
-      (person) => person.name === displayName && person.likes === vidId
-    );
-    if (index > -1) {
-      data.splice(index, 1);
-      context.setState({
-        currentVidID: vidId,
-        collectors: data,
-      });
-      await context.sendText(`您移除了「${vidId}」`);
-      await sendUserLikesList(context);
-    } else {
-      return sendHelp(`您不是${displayName}本人，無法移除唷！`, context);
-    }
+  await loggingProcess(context, 'disLike', item);
+  context.setState({ currentOperationItem: item });
+
+  const data = context.state.collectors;
+  const index = data.findIndex(
+    (user) =>
+      user.name === displayName && user.likes === item && user.type === itemType
+  );
+  if (index > -1) {
+    data.splice(index, 1);
+    context.setState({
+      collectors: data,
+    });
+    await context.sendText(`您${removeOrUnfollow}了「${item}」`);
+    await sendUserLikesList(context);
   } else {
     return sendHelp(
-      `${displayName}，您目前沒有收藏任何片子，沒有東西可讓您移除喔。`,
+      `您不是${displayName}本人，無法${removeOrUnfollow}唷！`,
       context
     );
   }
 }
 
 async function like(context) {
-  const { text } = context.event;
-  const vidId = parameterize(
-    text.match(/[A-Za-z]+[\s\-]?\d+/)[0]
-  ).toUpperCase();
-  await loggingProcess(context, 'like', vidId);
-
-  context.setState({ currentLikeVidID: vidId });
   const { displayName } = await context.getUserProfile();
+  const item = context.event.text.split('「')[1].split('」')[0];
+  const isItemTypeVideo = /[A-Za-z]+[\s\-]?\d+/.test(item);
+  const collectOrFollow = isItemTypeVideo ? '收藏' : '追蹤';
+  const itemType = isItemTypeVideo ? 'video' : 'actress';
+
+  await loggingProcess(context, 'like', item);
+  context.setState({ currentOperationItem: item });
+
   const data = context.state.collectors;
-  const index = data.findIndex(
-    (person) => person.name === displayName && person.likes === vidId
-  );
-  if (index > -1) {
-    await context.sendText(`您已收藏過「${vidId}」囉！`);
-    await sendUserLikesList(context);
+
+  if (await isItemExists(data, displayName, item, itemType)) {
+    await context.sendText(`您已${collectOrFollow}過「${item}」囉！`);
   } else {
-    // 如果頻道目前所抽的番號與準備要收藏的相同，不須驗證番號是否存在即可收藏。
-    if (context.state.currentVidID !== vidId) {
-      try {
-        await getSpecificMetaDataByVidId(vidId);
-        context.setState({
-          collectors: [
-            ...context.state.collectors,
-            {
-              date: await getLocalDate(),
-              name: displayName,
-              likes: vidId.trim(),
-            },
-          ],
-        });
-        await context.sendText(`您收藏了「${vidId}」`);
-        await sendUserLikesList(context);
-      } catch (error) {
-        return sendHelp(error, context);
-      }
-    } else {
-      context.setState({
-        collectors: [
-          ...context.state.collectors,
-          {
-            date: await getLocalDate(),
-            name: displayName,
-            likes: vidId.trim(),
-          },
-        ],
-      });
-      await context.sendText(`您收藏了「${vidId}」`);
-      await sendUserLikesList(context);
-    }
+    context.setState({
+      collectors: [
+        ...context.state.collectors,
+        {
+          date: await getLocalDate(),
+          name: displayName,
+          likes: item.trim(),
+          type: itemType,
+        },
+      ],
+    });
+    await context.sendText(`您${collectOrFollow}了「${item}」`);
   }
+  await sendUserLikesList(context);
 }
 
 async function sendUserLikesList(context) {
-  await loggingProcess(context, 'sendUserLikesList', 'self');
-
   const { displayName } = await context.getUserProfile();
+  const isCurrentItemTypeVideo = /[A-Za-z]+[\s\-]?\d+/.test(
+    context.state.currentOperationItem
+  );
+  const command = context.event.text.split('我的')[1];
+  const itemType =
+    command === '收藏' || isCurrentItemTypeVideo ? 'video' : 'actress';
+  const collectOrFollow = itemType === 'video' ? '收藏' : '追蹤';
+  const vidIdOrActress = itemType === 'video' ? '番號' : '女優';
+  const removeOrUnFollow = itemType === 'video' ? '移除' : '取消追蹤';
+
+  const hasItems = async (data, itemType) => {
+    const index = data.findIndex(
+      (user) => user.name === displayName && user.type === itemType
+    );
+    return index > -1;
+  };
+
+  await loggingProcess(context, 'sendUserLikesList', 'Self');
   const data = context.state.collectors;
-  const index = data.findIndex((person) => person.name === displayName);
-  if (index === -1) {
-    return sendHelp(`${displayName}，您目前沒有收藏任何片子喔。`, context);
-  } else {
-    const currentLikeVidID = context.state.currentLikeVidID;
+  if (await hasItems(data, itemType)) {
+    const currentOperationItem = context.state.currentOperationItem;
+    const itemData = _.filter(data, ['type', itemType]);
     await context.sendFlex(
-      `${displayName}的收藏清單`,
+      `${displayName}的${collectOrFollow}清單`,
       getUserLikesListFlexMessageObject(
         displayName,
-        getUserLikedItemsFlexMessageObject(data, displayName, currentLikeVidID)
+        getUserLikedItemsFlexMessageObject(
+          itemData,
+          displayName,
+          currentOperationItem,
+          removeOrUnFollow
+        ),
+        collectOrFollow,
+        removeOrUnFollow,
+        vidIdOrActress
       )
     );
+  } else {
+    return sendHelp(
+      `${displayName}，您目前沒有${collectOrFollow}任何${vidIdOrActress}喔。`,
+      context
+    );
   }
-  context.setState({ currentLikeVidID: '' });
+  context.setState({ currentOperationItem: '' });
 }
 
 async function sendHelp(msg, context) {
@@ -426,12 +422,12 @@ module.exports = async function App() {
   return router([
     text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVideo),
     text(/^抽{1}$/, sendRandomVideo),
-    text(/^收藏\s?[A-Za-z]+[\s\-]?\d+$/, like),
-    text(/^移除\s?[A-Za-z]+[\s\-]?\d+$/, disLike),
+    text(/^(收藏|追蹤)「.+」$/, like),
+    text(/^(移除|取消追蹤)「.+」$/, disLike),
     text(/^演員資訊「.+」$/, sendActressInfo),
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
-    text(/^我的收藏$/, sendUserLikesList),
+    text(/^我的(收藏|追蹤)$/, sendUserLikesList),
     text(/^test$/, test),
     // route('*', sendHelp),
   ]);

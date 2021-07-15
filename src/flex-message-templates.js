@@ -243,6 +243,26 @@ const getActressInfoFlexMessageObject = (actressName, actressInfoMetaData) => {
           height: 'sm',
           action: {
             type: 'message',
+            label: `追蹤「${actressName}」`,
+            text: `追蹤「${actressName}」`,
+          },
+        },
+        {
+          type: 'button',
+          style: 'primary',
+          height: 'sm',
+          action: {
+            type: 'message',
+            label: '列出我的追蹤清單',
+            text: '我的追蹤',
+          },
+        },
+        {
+          type: 'button',
+          style: 'primary',
+          height: 'sm',
+          action: {
+            type: 'message',
             label: '列出她的高評價作品',
             text: `高評價作品「${actressName}」`,
           },
@@ -369,7 +389,7 @@ const getVideoInfoFlexMessageObject = (
           action: {
             type: 'message',
             label: `收藏 ${videoInfoMetaData.vidId}`,
-            text: `收藏 ${videoInfoMetaData.vidId}`,
+            text: `收藏「${videoInfoMetaData.vidId}」`,
           },
         },
         {
@@ -378,7 +398,7 @@ const getVideoInfoFlexMessageObject = (
           height: 'sm',
           action: {
             type: 'message',
-            label: '列出我的收藏',
+            label: '列出我的收藏清單',
             text: '我的收藏',
           },
         },
@@ -441,7 +461,13 @@ const getActresssNameFlexMessageObject = (actresses) => {
   return actressFlexContents;
 };
 
-const getUserLikesListFlexMessageObject = (displayName, likedItems) => {
+const getUserLikesListFlexMessageObject = (
+  displayName,
+  likedItems,
+  collectOrFollow,
+  removeOrUnFollow,
+  vidIdOrActress
+) => {
   return {
     type: 'bubble',
     size: 'kilo',
@@ -451,7 +477,7 @@ const getUserLikesListFlexMessageObject = (displayName, likedItems) => {
       contents: [
         {
           type: 'text',
-          text: `${displayName}的收藏清單`,
+          text: `${displayName}的${collectOrFollow}清單`,
           align: 'center',
           size: 'lg',
           weight: 'bold',
@@ -463,7 +489,7 @@ const getUserLikesListFlexMessageObject = (displayName, likedItems) => {
           contents: [
             {
               type: 'text',
-              text: '番號',
+              text: `${vidIdOrActress}`,
               size: 'md',
               margin: 'none',
               flex: 5,
@@ -473,7 +499,7 @@ const getUserLikesListFlexMessageObject = (displayName, likedItems) => {
             },
             {
               type: 'text',
-              text: '移除',
+              text: removeOrUnFollow,
               size: 'md',
               margin: 'none',
               flex: 5,
@@ -523,7 +549,8 @@ const getUserLikesListFlexMessageObject = (displayName, likedItems) => {
 const getUserLikedItemsFlexMessageObject = (
   data,
   displayName,
-  currentLikeVidID
+  currentOperationItem,
+  removeOrUnFollow
 ) => {
   const flexContent = [];
   _.forEach(_.groupBy(data, 'name')[displayName], (value) => {
@@ -540,16 +567,19 @@ const getUserLikedItemsFlexMessageObject = (
           margin: 'none',
           flex: 5,
           align: 'center',
-          decoration: currentLikeVidID === value.likes ? 'underline' : 'none',
+          decoration:
+            currentOperationItem === value.likes ? 'underline' : 'none',
           action: {
             type: 'message',
             label: 'action',
-            text: value.likes,
+            text: /[A-Za-z]+[\s\-]?\d+/.test(value.likes)
+              ? value.likes
+              : `演員資訊「${value.likes}」`,
           },
         },
         {
           type: 'text',
-          text: '移除',
+          text: `${removeOrUnFollow}`,
           size: 'sm',
           color: '#dc3545',
           margin: 'none',
@@ -560,7 +590,7 @@ const getUserLikedItemsFlexMessageObject = (
           action: {
             type: 'message',
             label: 'action',
-            text: `移除 ${value.likes}`,
+            text: `${removeOrUnFollow}「${value.likes}」`,
           },
         },
       ],

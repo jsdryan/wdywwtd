@@ -8,6 +8,6 @@
 ## Todos
 
 - [ ] Showing Top 10 actresses from Fanza.
-- [ ] Collecting actresses.
+- [x] Collecting actresses.
 - [ ] Setting channel's genre.
 - [ ] Implement recommender system.

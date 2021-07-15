@@ -21,8 +21,7 @@ module.exports = {
     },
   },
   initialState: {
-    currentVidID: '',
-    currentLikeVidID: '',
+    currentOperationItem: '',
     collectors: [],
   },
   channels: {
