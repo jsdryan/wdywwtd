@@ -354,7 +354,7 @@ const getVideoInfoFlexMessageObject = (
           height: 'sm',
           action: {
             type: 'message',
-            label: '預告片',
+            label: '點我看預告',
             text: `預告片「${videoInfoMetaData.vidId}」`,
           },
         },
@@ -364,7 +364,7 @@ const getVideoInfoFlexMessageObject = (
           height: 'sm',
           action: {
             type: 'uri',
-            label: '片源 1',
+            label: '點我看片（片源 1）',
             uri: videoSourceUrl[0],
           },
         },
@@ -374,7 +374,7 @@ const getVideoInfoFlexMessageObject = (
           height: 'sm',
           action: {
             type: 'uri',
-            label: '片源 2',
+            label: '點我看片（片源 2）',
             uri: videoSourceUrl[1],
           },
         },
