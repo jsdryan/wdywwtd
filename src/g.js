@@ -6,7 +6,7 @@ const getAllVideoId = async () => {
   const data = [];
   for (let pageNum = 1; pageNum <= 25; pageNum++) {
     console.log(`Page ${pageNum}`);
-    const res = await got(`https://www.javlibrary.com/tw/vl_bestrated.php`, {
+    const res = await got(`https://www.javlibrary.com/tw/vl_mostwanted.php`, {
       searchParams: { mode: 1, page: pageNum },
       headers: { Cookie: 'over18=18', 'user-agent': 'Android' },
     });
