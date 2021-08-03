@@ -1,4 +1,4 @@
-const javLibraryJuneDataArray = [
+const javLibraryDataArray = [
   'FSDSS-259',
   'IPX-697',
   'SSIS-123',
@@ -502,5 +502,5 @@ const javLibraryJuneDataArray = [
 ];
 
 module.exports = {
-  javLibraryJuneDataArray,
+  javLibraryDataArray,
 };

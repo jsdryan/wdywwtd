@@ -5,7 +5,7 @@ const _ = require('lodash');
 const got = require('got');
 const httpsUrl = require('https-url');
 const logger = require('heroku-logger');
-const { javLibraryJuneDataArray } = require('./javlibrary-data.js');
+const { javLibraryDataArray } = require('./javlibrary-data.js');
 const {
   getActressInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
@@ -63,7 +63,8 @@ async function getSpecificMetaDataByVidId(vidId) {
 
 async function getRandomMetaData() {
   const getRandomVideoId = async () => {
-    return javLibraryJuneDataArray[_.random(0, 638)];
+    const videoLength = javLibraryDataArray.length;
+    return javLibraryDataArray[_.random(0, videoLength)];
   };
 
   const randomizedVidId = await getRandomVideoId();
