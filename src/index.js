@@ -15,14 +15,37 @@ const {
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
 } = require('./flex-message-templates.js');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const dateTime = require('node-datetime');
 
 async function loggingProcess(context, actionName, target) {
+  const getDateTime = async (format) => {
+    const dt = dateTime.create();
+    return dt.format(format);
+  };
+
   const { displayName, pictureUrl } = await context.getUserProfile();
-  logger.info(`${actionName}`, {
-    displayName: displayName,
-    pictureUrl: pictureUrl || 'No profile picture.',
-    target: target,
-  });
+  const doc = new GoogleSpreadsheet(
+    '1yCwmynf98-OSs9iwR1GCd7NpuWbS0beOIPyPssxETeM'
+  );
+  const creds = require('./spreadsheet_secret.json');
+  await doc.useServiceAccountAuth(creds);
+  await doc.loadInfo();
+  const sheet = doc.sheetsById[0];
+
+  const row = {
+    大頭貼: `=image("${
+      pictureUrl ||
+      'https://images.squarespace-cdn.com/content/v1/58f7904703596ef4c4bdb2e1/1502724353318-778JDBZN2K70W5HRRGIY/no+avatar.png?format=500w'
+    }")`,
+    色色主角: displayName,
+    日期: await getDateTime('Y-m-d'),
+    時間: await getDateTime('H:M:S'),
+    做了什麼: actionName,
+    針對番號: target,
+  };
+
+  await sheet.addRow(row);
 }
 
 async function getLocalDate() {
@@ -68,8 +91,8 @@ async function getRandomMetaData() {
   };
 
   const randomizedVidId = await getRandomVideoId();
-  const specificMetaData = await getSpecificMetaDataByVidId(randomizedVidId);
-  return specificMetaData;
+  const randomMetaData = await getSpecificMetaDataByVidId(randomizedVidId);
+  return randomMetaData;
 }
 
 async function sendVideoInfoByMetaData(videoInfoMetaData, context) {

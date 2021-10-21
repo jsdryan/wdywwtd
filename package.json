@@ -16,11 +16,13 @@
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "3.4.0",
     "express": "^4.17.1",
+    "google-spreadsheet": "^3.1.15",
     "got": "^11.8.2",
     "heroku-logger": "^0.3.3",
     "https-url": "^1.0.0",
     "jest": "27.0.3",
     "lodash": "^4.17.21",
+    "node-datetime": "^2.1.2",
     "nodemon": "^2.0.10",
     "parameterize": "^1.0.0",
     "serve-favicon": "^2.5.0"
