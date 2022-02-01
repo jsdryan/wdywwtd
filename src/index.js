@@ -314,7 +314,7 @@ async function getTrailerUrlById(vidId) {
 
 async function sendTenContPop(context) {
   let bubbles = [];
-  for (let index = 1; index <= 3; index++) {
+  for (let index = 1; index <= 10; index++) {
     const metaData = await getRandomMetaData();
     const videoSourceUrl = [
       `https://jable.tv/videos/${metaData.vidId}/`,
