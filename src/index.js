@@ -312,6 +312,27 @@ async function getTrailerUrlById(vidId) {
   }
 }
 
+async function sendTenContPop(context) {
+  let bubbles = [];
+  for (let index = 1; index <= 3; index++) {
+    const metaData = await getRandomMetaData();
+    const videoSourceUrl = [
+      `https://jable.tv/videos/${metaData.vidId}/`,
+      `https://www2.javhdporn.net/video/${metaData.vidId}/`,
+    ];
+    const bubble = getVideoInfoFlexMessageObject(
+      metaData,
+      getActresssNameFlexMessageObject(metaData.actresses),
+      videoSourceUrl
+    );
+    bubbles.push(bubble);
+  }
+  await context.sendCarouselTemplate(altText, {
+    type: 'carousel',
+    contents: bubbles,
+  });
+}
+
 async function sendRandomVideo(context) {
   const metaData = await getRandomMetaData();
   await loggingProcess(context, 'sendRandomVideo', metaData.vidId);
@@ -446,6 +467,7 @@ module.exports = async function App() {
   return router([
     text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVideo),
     text(/^抽{1}$/, sendRandomVideo),
+    text(/^十連抽{1}$/, sendTenContPop),
     text(/^(收藏|追蹤)「.+」$/, like),
     text(/^(移除|取消追蹤)「.+」$/, disLike),
     text(/^女優資訊「.+」$/, sendActressInfo),
