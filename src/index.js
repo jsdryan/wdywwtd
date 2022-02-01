@@ -327,7 +327,8 @@ async function sendTenContPop(context) {
     );
     bubbles.push(bubble);
   }
-  await context.sendCarouselTemplate('十連抽', {
+
+  await context.sendFlex('十連抽', {
     type: 'carousel',
     contents: bubbles,
   });
