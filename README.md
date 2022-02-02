@@ -1,21 +1,22 @@
-# LINE Bot: What do you want to watch today?
+# LINE 機器人：欸你今天要看哪片
 
-## Features:
+## 功能
 
-- Users can grab a random video's information from JavLibrary's high-rated section.
-- Users can collect which video they want after getting a video randomly.
+- 使用者可以從 JavLibrary 的「高評價」區隨機抽片。
+- 使用者可以針對每一部片片進行「收藏」或「觀看預覽」。
 
-## Todos
+## 待實現
 
-- [x] Showing Top 10 actresses from Fanza.
-- [x] Collecting actresses.
-- [ ] Setting channel's genre.
-- [ ] Implement recommender system.
-- [ ] Making a monitoring system.
+- [x] 十連抽。
+- [ ] 列出 Fanza 的 Top 10 女優。
+- [x] 收藏女優名。
+- [ ] 設定目前機器人抽片的類型。
+- [ ] 推薦系統。
+- [ ] 後臺系統。
 
-### Monitoring System:
+### 後臺系統
 
-#### JSON Example
+#### JSON 範例
 
 ```json
 {
@@ -27,7 +28,7 @@
 }
 ```
 
-#### View Example
+#### 後臺顯示範例
 
 ```
 2021-10-13:
