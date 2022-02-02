@@ -4,7 +4,6 @@ const parameterize = require('parameterize');
 const _ = require('lodash');
 const got = require('got');
 const httpsUrl = require('https-url');
-const logger = require('heroku-logger');
 const { javLibraryDataArray } = require('./javlibrary-data.js');
 const {
   getActressInfoFlexMessageObject,
