@@ -13,6 +13,7 @@ const {
   getUserLikedItemsFlexMessageObject,
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
+  getActressRankingFlexMessageObject,
 } = require('./flex-message-templates.js');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const dateTime = require('node-datetime');
@@ -353,9 +354,11 @@ async function sendSpecificVideo(context) {
 }
 
 async function sendActressInfo(context) {
-  const getActressInfoMetaDataByName = async (actress) => {
+  const getActressInfoMetaDataByName = async (actressName) => {
     const apiUrl = 'https://dmm-api-for-wdywwyd.herokuapp.com';
-    const response = await got(`${apiUrl}/actresses_info?actress=${actress}`);
+    const response = await got(
+      `${apiUrl}/actresses_info?actress=${actressName}`
+    );
     const actressMetaData = JSON.parse(response.body);
     const profilePicURL = actressMetaData.img_url;
     const birthDate = actressMetaData.birth_date;
@@ -459,22 +462,35 @@ async function sendHighRatedVideos(context) {
   );
 }
 
-const test = async (context) => {
-  await context.sendText('Test function.');
-};
+async function fanzaMonthly(context) {
+  let bubbles = [];
+  const apiUrl =
+    'https://dmm-api-for-wdywwyd.herokuapp.com/fanza_monthly_actress';
+  const response = await got(apiUrl);
+  const fanzaMonthlyArray = JSON.parse(response.body).result;
+  fanzaMonthlyArray.length = 10;
+  for (const actressRankMetaData of fanzaMonthlyArray) {
+    const bubble = getActressRankingFlexMessageObject(actressRankMetaData);
+    bubbles.push(bubble);
+  }
+
+  await context.sendFlex('本月女優排行榜', {
+    type: 'carousel',
+    contents: bubbles,
+  });
+}
 
 module.exports = async function App() {
   return router([
     text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVideo),
     text(/^抽{1}$/, sendRandomVideo),
     text(/^十連抽{1}$/, sendTenContPop),
+    text(/^女優排行榜{1}$/, fanzaMonthly),
     text(/^(收藏|追蹤)「.+」$/, like),
     text(/^(移除|取消追蹤)「.+」$/, disLike),
     text(/^女優資訊「.+」$/, sendActressInfo),
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的(收藏|追蹤)$/, sendUserLikesList),
-    text(/^test$/, test),
-    // route('*', sendHelp),
   ]);
 };

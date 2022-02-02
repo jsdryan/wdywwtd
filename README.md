@@ -7,7 +7,7 @@
 
 ## 待實現功能
 
-- [ ] 列出 Fanza 的每月 Top 10。
+- [x] 列出 Fanza 的每月 Top 10。
 - [ ] 列出 Fanza 的 Top 10 新人。
 - [ ] 使用者提示選單。
 - [ ] 每月自動從 JavLibrary 更新番號。

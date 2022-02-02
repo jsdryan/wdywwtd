@@ -15,6 +15,7 @@ module.exports = {
         db: 0,
       },
       mongo: {
+        // url: 'mongodb+srv://fap:Xu5x884HIP5vLzBe@cluster0.pdny9.mongodb.net/wdywwtd?retryWrites=true&w=majority',
         url: process.env.MONGODB_URI,
         collectionName: 'sessions',
       },
@@ -44,6 +45,10 @@ module.exports = {
     line: {
       enabled: true,
       path: '/webhooks/line',
+      // accessToken:
+      // accessToken:
+        'ryravMGgKM0PaRu9LK4z04WFcH0yPPYsVlLY52P6ivzFQjnaX9cBMka7Rbg6kC0PlL65MVg8m/eoFdj5QbJFQRlVvXACdwbHBLPtvzyzPy5lERQ2URnbp5cEFeJjRF0+BiLsda2YXfR4DfXjpYwAigdB04t89/1O/w1cDnyilFU=',
+      // channelSecret: '5db59f62c6d5c92e4cb50852da5a51ac',
       accessToken: process.env.LINE_ACCESS_TOKEN,
       channelSecret: process.env.LINE_CHANNEL_SECRET,
     },

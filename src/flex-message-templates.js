@@ -1,6 +1,122 @@
 const _ = require('lodash');
 const httpsUrl = require('https-url');
 
+const getActressRankingFlexMessageObject = (actressRankMetaData) => {
+  return {
+    type: 'bubble',
+    size: 'micro',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'text',
+          text: `第 ${actressRankMetaData.rank} 名`,
+          align: 'center',
+          size: 'lg',
+          weight: 'bold',
+          margin: 'none',
+          style: 'normal',
+          offsetTop: 'none',
+          offsetBottom: 'none',
+        },
+      ],
+    },
+    hero: {
+      type: 'image',
+      size: '3xl',
+      url: actressRankMetaData.img,
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: actressRankMetaData.name,
+              align: 'center',
+              size: 'md',
+              weight: 'bold',
+              margin: 'xxl',
+              style: 'normal',
+              offsetTop: 'none',
+              offsetBottom: 'none',
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              contents: [
+                {
+                  type: 'box',
+                  layout: 'baseline',
+                  margin: 'lg',
+                  contents: [
+                    {
+                      type: 'text',
+                      text: '作品數量',
+                      size: 'sm',
+                      color: '#999999',
+                      margin: 'none',
+                      flex: 5,
+                      align: 'center',
+                      decoration: 'none',
+                    },
+                    {
+                      type: 'text',
+                      text: actressRankMetaData.works,
+                      size: 'sm',
+                      color: '#AAAAAA',
+                      margin: 'none',
+                      flex: 5,
+                      align: 'center',
+                      offsetStart: 'md',
+                      decoration: 'none',
+                    },
+                  ],
+                },
+              ],
+              margin: 'none',
+              offsetEnd: 'none',
+              offsetBottom: 'none',
+            },
+          ],
+          offsetBottom: 'xxl',
+        },
+      ],
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      contents: [
+        {
+          type: 'separator',
+          margin: 'none',
+        },
+        {
+          type: 'button',
+          style: 'primary',
+          height: 'sm',
+          action: {
+            type: 'message',
+            label: '女優資訊',
+            text: `女優資訊「${actressRankMetaData.name}」`,
+          },
+        },
+        {
+          type: 'spacer',
+          size: 'sm',
+        },
+      ],
+      flex: 0,
+    },
+  };
+};
+
 const getActressInfoFlexMessageObject = (actressName, actressInfoMetaData) => {
   return {
     type: 'bubble',
@@ -723,4 +839,5 @@ module.exports = {
   getUserLikedItemsFlexMessageObject,
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
+  getActressRankingFlexMessageObject,
 };
