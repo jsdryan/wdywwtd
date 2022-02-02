@@ -63,3 +63,4 @@ typings/
 .env
 
 .vercel
+.DS_Store
