@@ -14,6 +14,7 @@ const {
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
   getActressRankingFlexMessageObject,
+  getNewFacesFlexMessageObject,
 } = require('./flex-message-templates.js');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const dateTime = require('node-datetime');
@@ -480,12 +481,30 @@ async function fanzaMonthly(context) {
   });
 }
 
+async function newfaces(context) {
+  const apiURL = 'https://dmm-api-for-wdywwyd.herokuapp.com/newfaces';
+  let bubbles = [];
+  const response = await got(apiURL);
+  const newfacesArray = JSON.parse(response.body).results;
+  newfacesArray.length = 10;
+  for (const newFaceMetaData of newfacesArray) {
+    const bubble = getNewFacesFlexMessageObject(newFaceMetaData);
+    bubbles.push(bubble);
+  }
+
+  await context.sendFlex('新人女優', {
+    type: 'carousel',
+    contents: bubbles,
+  });
+}
+
 module.exports = async function App() {
   return router([
     text(/^[A-Za-z]+[\s\-]?\d+$/, sendSpecificVideo),
     text(/^抽{1}$/, sendRandomVideo),
     text(/^十連抽{1}$/, sendTenContPop),
     text(/^女優排行榜{1}$/, fanzaMonthly),
+    text(/^新人{1}$/, newfaces),
     text(/^(收藏|追蹤)「.+」$/, like),
     text(/^(移除|取消追蹤)「.+」$/, disLike),
     text(/^女優資訊「.+」$/, sendActressInfo),

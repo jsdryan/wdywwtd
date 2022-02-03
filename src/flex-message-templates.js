@@ -831,6 +831,70 @@ const getHighRatedItemsFlexMessageObject = (highRatedVideoIdArray) => {
   return highRatedVideoIdFlexContent;
 };
 
+const getNewFacesFlexMessageObject = (newFaceMetaData) => {
+  return {
+    type: 'bubble',
+    size: 'micro',
+    hero: {
+      type: 'image',
+      size: '3xl',
+      url: httpsUrl(newFaceMetaData.img),
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            {
+              type: 'text',
+              text: newFaceMetaData.name,
+              align: 'center',
+              size: 'md',
+              weight: 'bold',
+              margin: 'xxl',
+              style: 'normal',
+              offsetTop: 'none',
+              offsetBottom: 'none',
+            },
+          ],
+          offsetBottom: 'xxl',
+        },
+      ],
+      offsetTop: 'lg',
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      contents: [
+        {
+          type: 'separator',
+          margin: 'none',
+        },
+        {
+          type: 'button',
+          style: 'primary',
+          height: 'sm',
+          action: {
+            type: 'message',
+            label: '女優資訊',
+            text: `女優資訊「${newFaceMetaData.name}」`,
+          },
+        },
+        {
+          type: 'spacer',
+          size: 'sm',
+        },
+      ],
+      flex: 0,
+      margin: 'none',
+    },
+  };
+};
+
 module.exports = {
   getActressInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
@@ -840,4 +904,5 @@ module.exports = {
   getHighRatedVideoListFlexMessageObject,
   getHighRatedItemsFlexMessageObject,
   getActressRankingFlexMessageObject,
+  getNewFacesFlexMessageObject,
 };
