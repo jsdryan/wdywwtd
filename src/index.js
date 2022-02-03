@@ -467,7 +467,7 @@ async function fanzaMonthly(context) {
   const apiUrl =
     'https://dmm-api-for-wdywwyd.herokuapp.com/fanza_monthly_actress';
   const response = await got(apiUrl);
-  const fanzaMonthlyArray = JSON.parse(response.body).result;
+  const fanzaMonthlyArray = JSON.parse(response.body).results;
   fanzaMonthlyArray.length = 10;
   for (const actressRankMetaData of fanzaMonthlyArray) {
     const bubble = getActressRankingFlexMessageObject(actressRankMetaData);
