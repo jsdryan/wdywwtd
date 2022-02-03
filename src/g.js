@@ -13,7 +13,7 @@ const getAllVideoId = async () => {
       {
         method: 'GET',
         headers: { Cookie: 'over18=18', 'user-agent': 'Android' },
-        params: { mode: 1, page: 1 },
+        params: { mode: 1, page: pageNum },
       }
     );
     const $ = cheerio.load(res.data);
