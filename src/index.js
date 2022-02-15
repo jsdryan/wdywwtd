@@ -8,7 +8,7 @@ const { javLibraryDataArray } = require('./javlibrary-data.js');
 const {
   getActressInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
-  getActresssNameFlexMessageObject,
+  getActressNameFlexMessageObject,
   getUserLikesListFlexMessageObject,
   getUserLikedItemsFlexMessageObject,
   getHighRatedVideoListFlexMessageObject,
@@ -18,6 +18,7 @@ const {
 } = require('./flex-message-templates.js');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const dateTime = require('node-datetime');
+const { randomGanHua } = require('./ganHuaArray');
 
 async function loggingProcess(context, actionName, target) {
   const getDateTime = async (format) => {
@@ -106,7 +107,7 @@ async function sendVideoInfoByMetaData(videoInfoMetaData, context) {
     `「${videoInfoMetaData.vidId}」影片資訊。`,
     getVideoInfoFlexMessageObject(
       videoInfoMetaData,
-      getActresssNameFlexMessageObject(videoInfoMetaData.actresses),
+      getActressNameFlexMessageObject(videoInfoMetaData.actresses),
       videoSourceUrl
     )
   );
@@ -323,7 +324,7 @@ async function sendTenContPop(context) {
     ];
     const bubble = getVideoInfoFlexMessageObject(
       metaData,
-      getActresssNameFlexMessageObject(metaData.actresses),
+      getActressNameFlexMessageObject(metaData.actresses),
       videoSourceUrl
     );
     bubbles.push(bubble);
@@ -485,9 +486,9 @@ async function newfaces(context) {
   const apiURL = 'https://dmm-api-for-wdywwyd.herokuapp.com/newfaces';
   let bubbles = [];
   const response = await got(apiURL);
-  const newfacesArray = JSON.parse(response.body).results;
-  newfacesArray.length = 10;
-  for (const newFaceMetaData of newfacesArray) {
+  const newFacesArray = JSON.parse(response.body).results;
+  newFacesArray.length = 10;
+  for (const newFaceMetaData of newFacesArray) {
     const bubble = getNewFacesFlexMessageObject(newFaceMetaData);
     bubbles.push(bubble);
   }
@@ -496,6 +497,10 @@ async function newfaces(context) {
     type: 'carousel',
     contents: bubbles,
   });
+}
+
+async function sendGanHua(context) {
+  await context.sendText(randomGanHua);
 }
 
 module.exports = async function App() {
@@ -511,5 +516,6 @@ module.exports = async function App() {
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的(收藏|追蹤)$/, sendUserLikesList),
+    text(/^展隆幹話$/, sendGanHua),
   ]);
 };

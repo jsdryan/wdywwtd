@@ -538,7 +538,7 @@ const getVideoInfoFlexMessageObject = (
   };
 };
 
-const getActresssNameFlexMessageObject = (actresses) => {
+const getActressNameFlexMessageObject = (actresses) => {
   const actressesArray = actresses.split('、');
   const actressFlexContents = [];
   for (let i = 0; i < actressesArray.length; i++) {
@@ -898,7 +898,7 @@ const getNewFacesFlexMessageObject = (newFaceMetaData) => {
 module.exports = {
   getActressInfoFlexMessageObject,
   getVideoInfoFlexMessageObject,
-  getActresssNameFlexMessageObject,
+  getActressNameFlexMessageObject,
   getUserLikesListFlexMessageObject,
   getUserLikedItemsFlexMessageObject,
   getHighRatedVideoListFlexMessageObject,
