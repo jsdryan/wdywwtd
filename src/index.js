@@ -18,7 +18,7 @@ const {
 } = require('./flex-message-templates.js');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const dateTime = require('node-datetime');
-const { randomGanHua } = require('./ganHuaArray');
+const { ggLongGanHua, siQiGanHua, boWeiGanHua } = require('./ganHuaArray');
 
 async function loggingProcess(context, actionName, target) {
   const getDateTime = async (format) => {
@@ -499,9 +499,21 @@ async function newfaces(context) {
   });
 }
 
-async function sendGanHua(context) {
-  const ganHua = randomGanHua();
-  await context.sendText(ganHua);
+const getRandomGanHua = (ganHuaArray) => {
+  const ganHuaArrayLength = ganHuaArray.length;
+  return ganHuaArray[_.random(0, ganHuaArrayLength - 1)];
+};
+
+async function sendGgLongGanHua(context) {
+  await context.sendText(getRandomGanHua(ggLongGanHua));
+}
+
+async function sendSiQiGanHua(context) {
+  await context.sendText(getRandomGanHua(siQiGanHua));
+}
+
+async function sendBoWeiGanHua(context) {
+  await context.sendText(getRandomGanHua(boWeiGanHua));
 }
 
 module.exports = async function App() {
@@ -517,6 +529,8 @@ module.exports = async function App() {
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的(收藏|追蹤)$/, sendUserLikesList),
-    text(/^展隆幹話$/, sendGanHua),
+    text(/^展隆幹話$/, sendGgLongGanHua),
+    text(/^思齊幹話$/, sendSiQiGanHua),
+    text(/^伯瑋幹話$/, sendBoWeiGanHua),
   ]);
 };
