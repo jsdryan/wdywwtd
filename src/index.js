@@ -500,7 +500,8 @@ async function newfaces(context) {
 }
 
 async function sendGanHua(context) {
-  await context.sendText(randomGanHua);
+  const ganHua = randomGanHua();
+  await context.sendText(ganHua);
 }
 
 module.exports = async function App() {
