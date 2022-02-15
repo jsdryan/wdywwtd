@@ -89,7 +89,7 @@ async function getSpecificMetaDataByVidId(vidId) {
 async function getRandomMetaData() {
   const getRandomVideoId = async () => {
     const videoLength = javLibraryDataArray.length;
-    return javLibraryDataArray[_.random(0, videoLength)];
+    return javLibraryDataArray[_.random(0, videoLength - 1)];
   };
 
   const randomizedVidId = await getRandomVideoId();
