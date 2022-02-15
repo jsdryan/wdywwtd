@@ -14,8 +14,19 @@ const ggLongGanHua = [
   '誰的心裡沒有故事，只是已學會了控制。',
 ];
 
-const siQiGanHua = ['厝若要旺某要照三餐鞏', '厝若要興某要照三餐菁'];
+const siQiGanHua = [
+  '厝若要旺某要照三餐鞏',
+  '厝若要興某要照三餐菁',
+  '那束情人節花朵是滿額禮吧？',
+];
 
-const boWeiGanHua = ['很ㄘㄨㄚ喔', '不要說我有在5樓', '去旁邊烘乾'];
+const boWeiGanHua = [
+  '很ㄘㄨㄚ喔',
+  '不要說我有在5樓',
+  '去旁邊烘乾',
+  '幹廢物郭至宜',
+  '幹廢物姜威廷',
+  '5樓研析啊',
+];
 
 module.exports = { ggLongGanHua, siQiGanHua, boWeiGanHua };
