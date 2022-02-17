@@ -523,11 +523,28 @@ async function sendGanHua(context) {
       break;
   }
 
-  await context.sendText(await getRandomGanHua(sheetID), {
-    sender: { name, iconUrl },
-  });
+  // await context.sendText(await getRandomGanHua(sheetID), {
+  //   sender: { name, iconUrl },
+  // });
 
-  await context.sendFlex('幹話王', getGanHuaFlexMessageObject);
+  // await context.sendFlex('幹話王', getGanHuaFlexMessageObject);
+  await context.sendFlex('This is a hello world flex', {
+    type: 'bubble',
+    body: {
+      type: 'box',
+      layout: 'horizontal',
+      contents: [
+        {
+          type: 'text',
+          text: 'Hello,',
+        },
+        {
+          type: 'text',
+          text: 'World!',
+        },
+      ],
+    },
+  });
 }
 
 module.exports = async function App() {
