@@ -10,7 +10,7 @@ async function getRandomGanHua(sheetID) {
   await doc.loadInfo();
   const sheet = doc.sheetsById[sheetID];
   const rows = await sheet.getRows();
-  return (await sheet.getRows())[_.random(0, rows.length - 1)]._rawData[0];
+  return rows[_.random(0, rows.length - 1)]._rawData[0];
 }
 
 module.exports = { getRandomGanHua };
