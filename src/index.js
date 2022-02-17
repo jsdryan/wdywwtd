@@ -516,8 +516,8 @@ async function sendBoWei(context) {
   await context.sendText(getRandomGanHua(boWei));
 }
 
-async function(context) {
-  await context.sendText(getRandomGanHua(shangZhe))
+async function shangZhe(context) {
+  await context.sendText(getRandomGanHua(shangZhe));
 }
 
 module.exports = async function App() {
