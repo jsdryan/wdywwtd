@@ -18,7 +18,7 @@ const {
 } = require('./flex-message-templates.js');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const dateTime = require('node-datetime');
-const { ggLongGanHua, siQiGanHua, boWeiGanHua } = require('./ganHuaArray');
+const { ggLong, siQi, boWei, shangZhe } = require('./ganHuaArray');
 
 async function loggingProcess(context, actionName, target) {
   const getDateTime = async (format) => {
@@ -504,16 +504,20 @@ const getRandomGanHua = (ganHuaArray) => {
   return ganHuaArray[_.random(0, ganHuaArrayLength - 1)];
 };
 
-async function sendGgLongGanHua(context) {
-  await context.sendText(getRandomGanHua(ggLongGanHua));
+async function sendGgLong(context) {
+  await context.sendText(getRandomGanHua(ggLong));
 }
 
-async function sendSiQiGanHua(context) {
-  await context.sendText(getRandomGanHua(siQiGanHua));
+async function sendSiQi(context) {
+  await context.sendText(getRandomGanHua(siQi));
 }
 
-async function sendBoWeiGanHua(context) {
-  await context.sendText(getRandomGanHua(boWeiGanHua));
+async function sendBoWei(context) {
+  await context.sendText(getRandomGanHua(boWei));
+}
+
+async function(context) {
+  await context.sendText(getRandomGanHua(shangZhe))
 }
 
 module.exports = async function App() {
@@ -529,8 +533,9 @@ module.exports = async function App() {
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的(收藏|追蹤)$/, sendUserLikesList),
-    text(/^展隆幹話$/, sendGgLongGanHua),
-    text(/^思齊幹話$/, sendSiQiGanHua),
-    text(/^伯瑋幹話$/, sendBoWeiGanHua),
+    text(/^展隆幹話$/, sendGgLong),
+    text(/^思齊幹話$/, sendSiQi),
+    text(/^伯瑋幹話$/, sendBoWei),
+    text(/^尚哲幹話$/, shangZhe),
   ]);
 };

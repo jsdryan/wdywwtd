@@ -1,4 +1,4 @@
-const ggLongGanHua = [
+const ggLong = [
   '只要對象換得快，沒有悲傷只有愛。',
   '世界上有幾十億人口，但你卻沒人口。',
   '知音難尋，一砲就行。',
@@ -14,13 +14,13 @@ const ggLongGanHua = [
   '誰的心裡沒有故事，只是已學會了控制。',
 ];
 
-const siQiGanHua = [
+const siQi = [
   '厝若要旺某要照三餐鞏',
   '厝若要興某要照三餐菁',
   '那束情人節花朵是滿額禮吧？',
 ];
 
-const boWeiGanHua = [
+const boWei = [
   '很ㄘㄨㄚ喔',
   '不要說我有在5樓',
   '去旁邊烘乾',
@@ -29,4 +29,6 @@ const boWeiGanHua = [
   '5樓研析啊',
 ];
 
-module.exports = { ggLongGanHua, siQiGanHua, boWeiGanHua };
+const shangZhe = ['這很難，我從不講幹話。'];
+
+module.exports = { ggLong, siQi, boWei, shangZhe };
