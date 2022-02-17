@@ -501,27 +501,28 @@ async function newfaces(context) {
 
 async function sendGanHua(context) {
   let sheetID;
-  const { pictureUrl } = await context.getUserProfile();
+  let iconUrl;
   const name = context.event.text.split('幹話')[0];
   switch (name) {
     case '尚哲':
       sheetID = '1486435340';
+      iconUrl = 'https://i.imgur.com/cSs2UN6.jpg';
       break;
     case '展隆':
       sheetID = '0';
+      iconUrl = 'https://i.imgur.com/hgdoXUG.jpg';
       break;
     case '思齊':
       sheetID = '455738423';
+      iconUrl = 'https://i.imgur.com/JKMfDVE.jpg';
       break;
     case '伯瑋':
       sheetID = '577079059';
+      iconUrl = 'https://i.imgur.com/Cwf0k3j.png';
       break;
   }
   await context.sendText(await getRandomGanHua(sheetID), {
-    sender: {
-      name,
-      iconUrl: pictureUrl,
-    },
+    sender: { name, iconUrl },
   });
 }
 
