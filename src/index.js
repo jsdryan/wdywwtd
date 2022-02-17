@@ -501,7 +501,7 @@ async function newfaces(context) {
 
 async function sendGanHua(context) {
   let sheetID;
-  const person = text.split('幹話')[0];
+  const person = context.event.text.split('幹話')[0];
   switch (person) {
     case '尚哲':
       sheetID = '1486435340';
