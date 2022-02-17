@@ -533,7 +533,7 @@ async function sendGanHua(context) {
     body: {
       type: 'box',
       layout: 'vertical',
-      spacing: 'sm',
+      spacing: 'xs',
       contents: [
         {
           type: 'button',
@@ -543,6 +543,7 @@ async function sendGanHua(context) {
             text: '展隆幹話',
           },
           style: 'primary',
+          color: '#000000',
         },
         {
           type: 'button',
@@ -552,6 +553,7 @@ async function sendGanHua(context) {
             text: '伯瑋幹話',
           },
           style: 'primary',
+          color: '#000000',
         },
         {
           type: 'button',
@@ -561,6 +563,7 @@ async function sendGanHua(context) {
             text: '思齊幹話',
           },
           style: 'primary',
+          color: '#000000',
         },
         {
           type: 'button',
@@ -570,6 +573,18 @@ async function sendGanHua(context) {
             text: '尚哲幹話',
           },
           style: 'primary',
+          color: '#000000',
+        },
+        {
+          type: 'separator',
+        },
+        {
+          type: 'button',
+          action: {
+            type: 'uri',
+            label: '編輯幹話',
+            uri: 'https://docs.google.com/spreadsheets/d/1w5VzbMRUPNusATJpgZuRmKO08rOmtNM13Uc-8B37sv4/edit',
+          },
         },
       ],
       flex: 0,
