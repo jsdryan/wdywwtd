@@ -504,19 +504,19 @@ const getRandomGanHua = (ganHuaArray) => {
   return ganHuaArray[_.random(0, ganHuaArrayLength - 1)];
 };
 
-async function sendGgLong(context) {
+async function sendGgLongGanHua(context) {
   await context.sendText(getRandomGanHua(ggLong));
 }
 
-async function sendSiQi(context) {
+async function sendSiQiGanHua(context) {
   await context.sendText(getRandomGanHua(siQi));
 }
 
-async function sendBoWei(context) {
+async function sendBoWeiGanHua(context) {
   await context.sendText(getRandomGanHua(boWei));
 }
 
-async function shangZhe(context) {
+async function shangZheGanHua(context) {
   await context.sendText(getRandomGanHua(shangZhe));
 }
 
@@ -533,9 +533,9 @@ module.exports = async function App() {
     text(/^預告片「\s?[A-Za-z]+[\s\-]?\d+」$/, sendTrailer),
     text(/^高評價作品「.+」$/, sendHighRatedVideos),
     text(/^我的(收藏|追蹤)$/, sendUserLikesList),
-    text(/^展隆幹話$/, sendGgLong),
-    text(/^思齊幹話$/, sendSiQi),
-    text(/^伯瑋幹話$/, sendBoWei),
-    text(/^尚哲幹話$/, shangZhe),
+    text(/^展隆幹話$/, sendGgLongGanHua),
+    text(/^思齊幹話$/, sendSiQiGanHua),
+    text(/^伯瑋幹話$/, sendBoWeiGanHua),
+    text(/^尚哲幹話$/, shangZheGanHua),
   ]);
 };
