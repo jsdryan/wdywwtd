@@ -499,11 +499,6 @@ async function newfaces(context) {
   });
 }
 
-const getRandomGanHua = (ganHuaArray) => {
-  const ganHuaArrayLength = ganHuaArray.length;
-  return ganHuaArray[_.random(0, ganHuaArrayLength - 1)];
-};
-
 async function sendGanHua(context) {
   let sheetID;
   const person = text.split('幹話')[0];
