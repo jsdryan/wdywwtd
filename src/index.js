@@ -525,8 +525,6 @@ async function sendGanHua(context) {
   await context.sendText(await getRandomGanHua(sheetID), {
     sender: { name, iconUrl },
   });
-
-  await context.sendFlex('幹話王', getGanHuaFlexMessageObject);
 }
 
 module.exports = async function App() {
