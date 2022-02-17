@@ -501,8 +501,9 @@ async function newfaces(context) {
 
 async function sendGanHua(context) {
   let sheetID;
-  const person = context.event.text.split('幹話')[0];
-  switch (person) {
+  const { pictureUrl } = await context.getUserProfile();
+  const name = context.event.text.split('幹話')[0];
+  switch (name) {
     case '尚哲':
       sheetID = '1486435340';
       break;
@@ -516,7 +517,12 @@ async function sendGanHua(context) {
       sheetID = '577079059';
       break;
   }
-  await context.sendText(await getRandomGanHua(sheetID));
+  await context.sendText(await getRandomGanHua(sheetID), {
+    sender: {
+      name,
+      iconUrl: pictureUrl,
+    },
+  });
 }
 
 module.exports = async function App() {
