@@ -1,27 +1,16 @@
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+const _ = require('lodash');
 
-async function accessSpreadsheet() {
+async function getRandomGanHua(sheetID) {
   const doc = new GoogleSpreadsheet(
-    '1yCwmynf98-OSs9iwR1GCd7NpuWbS0beOIPyPssxETeM'
+    '1w5VzbMRUPNusATJpgZuRmKO08rOmtNM13Uc-8B37sv4'
   );
-  const creds = require('./spreadsheet_secret.json');
+  const creds = require('./ganhua-3681aa04365d.json');
   await doc.useServiceAccountAuth(creds);
   await doc.loadInfo();
-  const sheet = doc.sheetsById[0];
-  const profilePicURL = undefined;
-  const row = {
-    大頭貼: `=image("${
-      profilePicURL ||
-      'https://images.squarespace-cdn.com/content/v1/58f7904703596ef4c4bdb2e1/1502724353318-778JDBZN2K70W5HRRGIY/no+avatar.png?format=500w'
-    }")`,
-    色色主角: 'justin',
-    日期: '2021-09-21',
-    時間: '23:03',
-    做了什麼: '收藏',
-    針對番號: 'ABW-098',
-  };
-
-  await sheet.addRow(row);
+  const sheet = doc.sheetsById[sheetID];
+  const rows = await sheet.getRows();
+  return (await sheet.getRows())[_.random(0, rows.length - 1)]._rawData[0];
 }
 
-accessSpreadsheet();
+module.exports = { getRandomGanHua };

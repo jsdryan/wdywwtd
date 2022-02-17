@@ -17,7 +17,7 @@
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "3.4.0",
     "express": "^4.17.1",
-    "google-spreadsheet": "^3.1.15",
+    "google-spreadsheet": "^3.2.0",
     "got": "^11.8.2",
     "heroku-logger": "^0.3.3",
     "https-url": "^1.0.0",
