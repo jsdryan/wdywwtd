@@ -15,6 +15,7 @@ const {
   getHighRatedItemsFlexMessageObject,
   getActressRankingFlexMessageObject,
   getNewFacesFlexMessageObject,
+  getGanHuaFlexMessageObject,
 } = require('./flex-message-templates.js');
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const dateTime = require('node-datetime');
@@ -524,6 +525,8 @@ async function sendGanHua(context) {
   await context.sendText(await getRandomGanHua(sheetID), {
     sender: { name, iconUrl },
   });
+
+  await context.sendFlex('幹話王', getGanHuaFlexMessageObject);
 }
 
 module.exports = async function App() {

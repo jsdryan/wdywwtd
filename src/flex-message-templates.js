@@ -1,6 +1,56 @@
 const _ = require('lodash');
 const httpsUrl = require('https-url');
 
+const getGanHuaFlexMessageObject = () => {
+  return {
+    type: 'bubble',
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'sm',
+      contents: [
+        {
+          type: 'button',
+          action: {
+            type: 'message',
+            label: '展隆幹話',
+            text: '展隆幹話',
+          },
+          style: 'primary',
+        },
+        {
+          type: 'button',
+          action: {
+            type: 'message',
+            label: '伯瑋幹話',
+            text: '伯瑋幹話',
+          },
+          style: 'primary',
+        },
+        {
+          type: 'button',
+          action: {
+            type: 'message',
+            label: '思齊幹話',
+            text: '思齊幹話',
+          },
+          style: 'primary',
+        },
+        {
+          type: 'button',
+          action: {
+            type: 'message',
+            label: '尚哲幹話',
+            text: '尚哲幹話',
+          },
+          style: 'primary',
+        },
+      ],
+      flex: 0,
+    },
+  };
+};
+
 const getActressRankingFlexMessageObject = (actressRankMetaData) => {
   return {
     type: 'bubble',
@@ -905,4 +955,5 @@ module.exports = {
   getHighRatedItemsFlexMessageObject,
   getActressRankingFlexMessageObject,
   getNewFacesFlexMessageObject,
+  getGanHuaFlexMessageObject,
 };
