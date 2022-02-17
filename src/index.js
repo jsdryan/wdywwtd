@@ -522,9 +522,12 @@ async function sendGanHua(context) {
       iconUrl = 'https://i.imgur.com/Cwf0k3j.png';
       break;
   }
+
   await context.sendText(await getRandomGanHua(sheetID), {
     sender: { name, iconUrl },
   });
+
+  await context.sendFlex('幹話王', getGanHuaFlexMessageObject);
 }
 
 module.exports = async function App() {
