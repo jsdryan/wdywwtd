@@ -523,9 +523,9 @@ async function sendGanHua(context) {
       break;
   }
 
-  // await context.sendText(await getRandomGanHua(sheetID), {
-  //   sender: { name, iconUrl },
-  // });
+  await context.sendText(await getRandomGanHua(sheetID), {
+    sender: { name, iconUrl },
+  });
 
   // await context.sendFlex('幹話王', getGanHuaFlexMessageObject);
   await context.sendFlex('This is a hello world flex', {
